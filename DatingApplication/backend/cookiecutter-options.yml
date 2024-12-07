@@ -1,9 +1,0 @@
-default_context:
-    project_name: "DatingApplication"
-    app_name: "app"
-    python_version: "3.8"
-    admin_user_username: "maria"
-    admin_user_email: "mariiemik@gmail.com"
-    admin_user_password: "1751"
-    use_celery: "no"
-    wsgi_server: "gunicorn"

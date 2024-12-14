@@ -59,11 +59,11 @@ class Like(Base):
     __tablename__ = 'likes'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_from_id = Column(Integer, ForeignKey('user.id'))
-    user_to_id = Column(Integer, ForeignKey('user.id'))
+    user_id_from = Column(Integer, ForeignKey('user.id'))
+    user_id_to = Column(Integer, ForeignKey('user.id'))
 
-    user_from = relationship('User', foreign_keys=[user_from_id], back_populates='likes_from')
-    user_to = relationship('User', foreign_keys=[user_to_id], back_populates='likes_to')
+    user_from = relationship('User', foreign_keys=[user_id_from], back_populates='likes_from')
+    user_to = relationship('User', foreign_keys=[user_id_to], back_populates='likes_to')
 
 class Photo(Base):
     __tablename__ = 'photos'

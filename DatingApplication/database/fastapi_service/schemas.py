@@ -43,7 +43,7 @@ class Photo(BaseSchema):
 
 class Like(BaseSchema):
     # user_from_id: int
-    profile_id_to: int
+    user_id_to: int
 
     class Config:
         orm_mode = True

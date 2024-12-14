@@ -3,13 +3,13 @@ from _operator import or_, and_
 import schemas
 import database as dbase
 import datetime as dtime
-from typing import Listgit
-import models as m
+from typing import List
 import uuid #для токена
 import bcrypt # для токена
 from typing import Optional
 
-
+# TODO: Маша: Провести все валидации перед вызовом методов
+# TODO: Проверить что работает from_orm
 
 #------------------------------------------
 
@@ -29,13 +29,14 @@ def create_user(user: schemas.User, db: "Session") -> Optional[int]:
     db.add(new_user)
     db.commit()
     db.refresh(new_user)  # Обновляем объект, чтобы получить ID после добавления
-    return new_user.id # возвращаем ид
+    return new_user.id # возвращаем id
 
 def create_token(user_id: int, db: "Session") -> Optional[str]:
+    token_record = db.query(dbase.m.Token).filter(dbase.m.Token.user_id == user_id).first()
+    if token_record:
+        return None
     token = str(uuid.uuid4())
     new_token = dbase.m.Token(user_id=user_id, token=token, update_at=dtime.datetime.now(dtime.timezone.utc))
-    if not new_token: # проверка, что токен записался
-        return None
     db.add(new_token)
     db.commit()
     db.refresh(new_token)
@@ -54,7 +55,7 @@ def verify_password_by_email(email: str, entered_password: str, db: "Session") -
     return None  # Если пользователь не найден или пароль неверен
 
 
-def update_update_at (user_id: int, db: "Session") -> Optional[str]: #апдейтим время токена
+def update_token_update_at (user_id: int, db: "Session") -> Optional[str]: #апдейтим время токена
     token_record = db.query(dbase.m.Token).filter(dbase.m.Token.user_id == user_id).first()
     if not token_record:
         return None
@@ -77,16 +78,16 @@ def is_token_valid(token: str, db: "Session") -> Optional[bool]: #проверя
         return False
     return True
 
-def get_user_id_by_token(token: str, db: "Session") -> int:
+def get_user_id_by_token(token: str, db: "Session") -> Optional[int]:
     token_record = db.query(dbase.m.Token).filter(dbase.m.Token.token == token).first()
     if token_record:
         return token_record.user_id
-    return -1 #токен не найден
-
+    return None #токен не найден
 
 def create_or_update_profile(profile: schemas.Profile, db: "Session") -> bool:
+    if not is_token_valid(profile.token, db):
+        return False
     db_profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile.id).first()
-
     country_id = get_or_create_country(profile.country_name, db)
     city_id = get_or_create_city(profile.city_name, db)
 
@@ -125,11 +126,12 @@ def create_or_update_profile(profile: schemas.Profile, db: "Session") -> bool:
     return True
 
 
+def get_profile_by_token(token: str, db: "Session") -> Optional[schemas.Profile]:
+    user_id = get_user_id_by_token(token, db)
+    if not user_id:
+        return None
 
-
-def get_profile_by_token(token: str, db: "Session") -> schemas.Profile:
-    user = db.query(dbase.m.User).filter(dbase.m.User.user_id == get_user_id_by_token(token, db)).first()
-    profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id == user.id).first()
+    profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id == user_id).first()
     return schemas.Profile.from_orm(profile) if profile else None
 
 #Города и страны
@@ -145,7 +147,6 @@ async def get_or_create_country(country_name: str, db: "Session") -> int:
     return new_country.id
 
 async def get_or_create_city(city_name: str, db: "Session") -> int:
-
     existing_city = db.query(dbase.m.City).filter(dbase.m.City.city_name == city_name).first()
     if existing_city:
         return existing_city.id
@@ -158,33 +159,38 @@ async def get_or_create_city(city_name: str, db: "Session") -> int:
 
 #Фото
 async def create_photo(photo: schemas.Photo, db: "Session") -> bool:
-    new_photo = dbase.m.Photo(profile_id = get_profile_by_token(photo.token, db).id, photo_url=photo.photo_url)
+    profile = get_profile_by_token(photo.token, db)
+    if not profile:
+        return False
+
+    new_photo = dbase.m.Photo(profile_id = profile.id, photo_url=photo.photo_url)
     db.add(new_photo)
     db.commit()
     db.refresh(new_photo)
     return True
 
-async def delete_photo(photo_id: int, db: "Session") -> bool: # должен ли быть токен?
+async def delete_photo(photo_id: int, db: "Session") -> bool:
     db.query(dbase.m.Photo).filter(dbase.m.Photo.id == photo_id).delete()  # Удаляем фото
     db.commit()  # Применяем изменения в базе
     return True
 
-async def get_photos(profile_id: int, db: "Session") -> List[schemas.Photo]: # нужна ли проверка токена?
+async def get_photos(profile_id: int, db: "Session") -> List[schemas.Photo]:
     photos = db.query(dbase.m.Photo).filter(dbase.m.Photo.profile_id == profile_id).all()
     return [schemas.Photo.from_orm(photo) for photo in photos]
 
 #------------------------------------------
 
 # Претенденты на симпатию
+def get_all_profiles(token: str, db: "Session") -> List[schemas.Profile]: # фильтрация по паcсивам
+    my_user_id= get_user_id_by_token(token,db)
+    profiles = (db.query(dbase.m.Profile).filter(dbase.m.Profile.active == True, dbase.m.Profile.id != my_user_id).all())
 
-def get_all_profiles(db: "Session") -> List[schemas.Profile]: # фильтрация по паcсивам
-    profiles = db.query(dbase.m.Profile).filter(dbase.m.Profile.active == True).all()
     return [schemas.Profile.from_orm(profile) for profile in profiles]
 
 # лайк
 def create_likes(like: schemas.Like, db: "Session") -> bool:
     existing_like = db.query(dbase.m.Like).filter(
-        and_(dbase.m.Like.user_from_id == get_user_id_by_token(like.token, db), dbase.m.Like.user_to_id == like.user_id_to)
+        and_(dbase.m.Like.user_id_from == get_user_id_by_token(like.token, db), dbase.m.Like.user_id_to == like.user_id_to)
     ).first()
     if existing_like:
         return False #лайк уже существует
@@ -195,53 +201,72 @@ def create_likes(like: schemas.Like, db: "Session") -> bool:
     return True
 
 
-def get_match(like: schemas.Like, db: "Session") -> List[schemas.Profile]:
+def get_match(token: str, db: "Session") -> List[schemas.Profile]:
     # Получаем ID текущего пользователя
-    user_id = get_user_id_by_token(like.token, db)
+    user_id = get_user_id_by_token(token, db)
 
     # Получаем все профили, которым пользователь поставил лайк
-    likes_from = db.query(dbase.m.Like.user_to_id).filter(
-        dbase.m.Like.user_from_id == user_id
-    ).subquery()
+    likes_from = db.query(dbase.m.Like).filter(
+        dbase.m.Like.user_id_from == user_id
+    ).all()
 
     # Получаем все профили, которые поставили лайк текущему пользователю
-    likes_to = db.query(dbase.m.Like.user_from_id).filter(
-        dbase.m.Like.user_to_id == user_id
-    ).subquery()
-
-    # Находим пересечения между likes_from и likes_to
-    mutual_profiles = db.query(dbase.m.Profile).join(
-        likes_from, likes_from.c.user_to_id == dbase.m.Profile.user_id
-    ).filter(
-        dbase.m.Profile.user_id.in_(likes_to)
+    likes_to = db.query(dbase.m.Like).filter(
+        dbase.m.Like.user_id_to == user_id
     ).all()
-    return [schemas.Profile.from_orm(profile) for profile in mutual_profiles]
+
+    user_ids_to = set(l.user_id_to for l in likes_from)
+    user_ids_from = set(l.user_id_from for l in likes_to)
+
+    user_ids_match = user_ids_to.intersection(user_ids_from)
+    profiles_match = db.query(dbase.m.Profile).filter(
+        dbase.m.Profile.user_id in user_ids_match
+    ).all()
+
+    return [schemas.Profile.from_orm(profile) for profile in profiles_match]
+
 
 #_________________________________________________________
 #Удаление юзера
+
 async def delete_user_tokens(user_id: int, db: "Session") -> bool:
+    user_record = db.query(dbase.m.User).filter(dbase.m.User.id== user_id).first()
+    if not user_record:
+        return False
     db.query(dbase.m.Token).filter(dbase.m.Token.user_id == user_id).delete()
     db.commit()
     return True
 
 def delete_user_profile(profile_id: int, db: "Session") -> bool:
+    profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile_id).first()
+    if not profile:
+        return False
     db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile_id).delete()
     db.commit()
     return True
 
 def delete_user_photos(profile_id: int, db: "Session") -> bool:
+    profile_record = db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile_id).first()
+    if not profile_record:
+        return False
     db.query(dbase.m.Photo).filter(dbase.m.Photo.profile_id == profile_id).delete()
     db.commit()
     return True
 
 def delete_user_likes(user_id: int, db: "Session") -> bool:
+    user_record = db.query(dbase.m.User).filter(dbase.m.User.id == user_id).first()
+    if not user_record:
+        return False
     db.query(dbase.m.Like).filter(
-        or_(dbase.m.Like.user_from_id == user_id, dbase.m.Like.user_to_id == user_id)
+        or_(dbase.m.Like.user_id_from == user_id, dbase.m.Like.user_id_to == user_id)
     ).delete()
     db.commit()
     return True
 
 def delete_user(user_id: int, db: "Session") -> bool:
+    user_record = db.query(dbase.m.User).filter(dbase.m.User.id == user_id).first()
+    if not user_record:
+        return False
     db.query(dbase.m.User).filter(dbase.m.User.id == user_id).delete()
     db.commit()
     return True
@@ -252,8 +277,8 @@ def delete_user_fully(user_id: int, db: "Session") -> bool:
     profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id == user_id).first()
     if user is None:
         return False
-
-
+    if profile is None:
+        return False
     delete_user_tokens(user_id, db)
     delete_user_likes(user_id, db)
     if profile:

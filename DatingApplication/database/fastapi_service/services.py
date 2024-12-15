@@ -55,14 +55,15 @@ def verify_password_by_email(email: str, entered_password: str, db: "Session") -
     return None  # Если пользователь не найден или пароль неверен
 
 
-def update_token_update_at (user_id: int, db: "Session") -> Optional[str]: #апдейтим время токена
+def update_token(user_id: int, db: "Session") -> Optional[str]: #апдейтим время токена
     token_record = db.query(dbase.m.Token).filter(dbase.m.Token.user_id == user_id).first()
     if not token_record:
         return None
-    token_record.update_at = dtime.datetime.now(dtime.timezone.utc)# Обновляем поле update_at на текущее время
-    db.commit()
-    db.refresh(token_record)
-    return token_record.token  # Возвращаем токен, если обновление прошло успешно
+    delete_user_tokens(user_id, db)
+    actual_token=create_token(user_id, db)
+    # if actual_token == None:
+    #     return None
+    return actual_token  # Возвращаем токен, если обновление прошло успешно
 
 #------------------------------------------
 
@@ -158,7 +159,7 @@ async def get_or_create_city(city_name: str, db: "Session") -> int:
     return new_city.id
 
 #Фото
-async def create_photo(photo: schemas.Photo, db: "Session") -> bool:
+async def create_photo(photo: schemas.Photo, db: "Session") -> bool: #в сземе Ф
     profile = get_profile_by_token(photo.token, db)
     if not profile:
         return False

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from database.database import main_engine
+from database.session import main_engine
 from database import models
 from routes import routes  # Импортируем маршруты
 

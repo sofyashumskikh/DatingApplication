@@ -1,18 +1,8 @@
 from fastapi import APIRouter, Header, Depends, HTTPException, status, Response
-
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from typing import List, Optional
-from werkzeug.security import generate_password_hash, check_password_hash
-from jose import JWTError, jwt
-from typing import Optional
-import os
+from typing import List
 from database import schemas, services
-from sqlalchemy.orm import Session
 from database.database import get_db_session
-from uuid import UUID
-from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 
 # Инициализация роутера

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build: ./app/
     container_name: dating_app
     ports:
       - "7000:7000"

@@ -1,8 +1,8 @@
 from contextlib import contextmanager
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker #, Session
-from . import models as m
-#from .. import models as m
+import models as m
+
 main_engine = sa.create_engine(
     "postgresql://user:password@postgres:5432/dating_database",
     echo=True,

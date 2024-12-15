@@ -1,38 +1,52 @@
 <template>
-    <div class="login-page">
-      <div class="text-center">
-        <h2>Авторизация</h2>
-      </div>
-      <div class="fixed-center" style="width: 450px;">
-        <q-card class="my-card">
-          <q-card-section>
-            <q-input outlined label="Email" v-model="email" />
-            <br>
-            <q-input outlined label="Password" v-model="password" type="password"/>
-            <br>
-            <q-btn outline rounded color="primary" label="Login" @click="login"/>
-          </q-card-section>
-        </q-card>
-      </div>
+  <div class="login-page">
+    <div class="text-center">
+      <h2>Авторизация</h2>
     </div>
-  </template>
-  
-  <script>
-    export default {
-        setup() {
-            return {
-                email: '',
-                password: '',
-            };
-        },
-        methods: {
-            login() {
-            },
-        },  
+    <div class="fixed-center" style="width: 450px;">
+      <q-card class="my-card">
+        <q-card-section>
+          <q-input outlined label="Email" v-model="email" />
+          <br>
+          <q-input outlined label="Password" v-model="password" type="password" />
+          <br>
+          <q-btn outline rounded color="primary" label="Login" @click="login" />
+        </q-card-section>
+      </q-card>
+    </div>
+  </div>
+</template>
+
+<script>
+
+import { axios } from "axios";
+import { router } from "./router";
+
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      router.push("login-page")
+    }
+    return Promise.reject(error);
+  }
+)
+
+export default {
+  setup() {
+    return {
+      email: '',
+      password: '',
     };
-  </script>
-  
-  <style lang="sass">
+  },
+  methods: {
+    login() {
+    },
+  },
+};
+</script>
+
+<style lang="sass">
   .my-card
     width: 100%
     max-width: 500px 

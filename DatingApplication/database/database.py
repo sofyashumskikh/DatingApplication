@@ -27,3 +27,9 @@ def session_scope(): #-> Session:
         raise e
     finally:
         session.close()
+
+
+
+def get_db_session(session: Session = Depends(session_scope)) -> Session:
+    """Зависимость для получения сессии через session_scope"""
+    return session

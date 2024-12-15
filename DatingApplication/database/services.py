@@ -90,8 +90,8 @@ def get_user_id_by_token(token: str, db: "Session") -> Optional[int]:
     return None #токен не найден
 
 def create_or_update_profile(profile: schemas.Profile, db: "Session") -> bool:
-    if not is_token_valid(profile.token, db):
-        return False
+    """if not is_token_valid(profile.token, db):
+        return False""" #мне кажется можно убрать птмч этого нет в других методах и я проверяю сама это
     db_profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile.id).first()
     country_id = get_or_create_country(profile.country_name, db)
     city_id = get_or_create_city(profile.city_name, db)

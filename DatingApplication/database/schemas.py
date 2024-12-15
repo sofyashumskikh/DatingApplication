@@ -1,6 +1,7 @@
 import datetime as _dt
 import pydantic as pd
 
+
 class BaseSchema(pd.BaseModel):
     id : int
     token: str

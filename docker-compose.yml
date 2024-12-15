@@ -1,12 +1,22 @@
-version: '3'
-services:
-  proxy:
-    build: ./
-    ports:
-      - 8080:8080
-    container_name: api-gateway
+version: '3.8'
 
-networks:
-  default:
-    external:
-      name: agronetwork
+services:
+  app:
+    build: .
+    container_name: dating_app
+    ports:
+      - "7000:7000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/dating_database
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    container_name: dating_postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dating_database
+    ports:
+      - "5432:5432"

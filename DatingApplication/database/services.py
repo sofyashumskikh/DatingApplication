@@ -190,8 +190,10 @@ async def get_photos(profile_id: int, db: "Session") -> List[schemas.Photo]:
 def get_all_profiles(token: str, db: "Session") -> List[schemas.Profile]: # фильтрация по паcсивам
     my_user_id= get_user_id_by_token(token,db)
     profiles = (db.query(dbase.m.Profile).filter(dbase.m.Profile.active == True, dbase.m.Profile.id != my_user_id).all())
-
-    return [schemas.Profile.from_orm(profile) for profile in profiles]
+    profiles_schemas = [schemas.Profile.from_orm(profile) for profile in profiles]
+    for profile in profiles_schemas:
+        profile.nickname_tg = None #не показываем тг ник при просмотре профилей (показываем только при метче)
+    return profiles_schemas
 
 # лайк
 def create_likes(like: schemas.Like, db: "Session") -> bool:

@@ -1,7 +1,8 @@
-from contextlib import contextmanager
 import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker #, Session
-import models as m
+from fastapi import Depends
+from sqlalchemy.orm import sessionmaker, Session
+from contextlib import contextmanager
+from . import models as m
 
 main_engine = sa.create_engine(
     "postgresql://user:password@postgres:5432/dating_database",
@@ -27,7 +28,6 @@ def session_scope(): #-> Session:
         raise e
     finally:
         session.close()
-
 
 
 def get_db_session(session: Session = Depends(session_scope)) -> Session:

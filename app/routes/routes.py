@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Header, Depends, HTTPException, status, Response
 from typing import List
-from database import schemas, services
-from database.database import get_db_session
+from database import schemas, services, session
 from sqlalchemy.orm import Session
-
 
 # Инициализация роутера
 router = APIRouter()
@@ -15,7 +13,7 @@ async def home():
 
 
 @router.post("/api/register", response_model=schemas.BaseSchema)
-def register_user(user: schemas.User, db: Session = Depends(get_db_session)):
+def register_user(user: schemas.User, db: Session = Depends(session.get_db_session)):
     new_user_id = services.create_user(user, db)
     if new_user_id is None:
         raise HTTPException(status_code=400, detail="User with this email already exists")
@@ -28,7 +26,7 @@ def register_user(user: schemas.User, db: Session = Depends(get_db_session)):
 
 
 @router.post("/api/login", response_model=schemas.BaseSchema)
-def login_user(user: schemas.User, db: Session = Depends(get_db_session)):
+def login_user(user: schemas.User, db: Session = Depends(session.get_db_session)):
     user_id = services.verify_password_by_email(user.email, user.password, db)
     if user_id is None:
         raise HTTPException(status_code=400, detail="Invalid email pr password")
@@ -39,7 +37,7 @@ def login_user(user: schemas.User, db: Session = Depends(get_db_session)):
 
 
 @router.get("/api/users", response_model=List[schemas.Profile])
-def get_users(authorization: str = Header(...), db: Session = Depends(get_db_session)): #TODO: как света сделает подключить метод из сервисов
+def get_users(authorization: str = Header(...), db: Session = Depends(session.get_db_session)): #TODO: как света сделает подключить метод из сервисов
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
 
     authorized = services.is_token_valid(token, db)
@@ -50,7 +48,7 @@ def get_users(authorization: str = Header(...), db: Session = Depends(get_db_ses
 @router.post("/api/profile", response_class=Response) 
 def post_profile( new_profile: schemas.Profile,
                  authorization: str = Header(...),
-                db: Session = Depends(get_db_session)):
+                db: Session = Depends(session.get_db_session)):
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
 
     authorized = services.is_token_valid(token, db)
@@ -66,7 +64,7 @@ def post_profile( new_profile: schemas.Profile,
 
 
 @router.get("/api/profile", response_model=schemas.Profile)
-def get_profile(authorization: str = Header(...), db: Session = Depends(get_db_session)): 
+def get_profile(authorization: str = Header(...), db: Session = Depends(session.get_db_session)):
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
 
     authorized = services.is_token_valid(token, db)
@@ -82,7 +80,7 @@ def get_profile(authorization: str = Header(...), db: Session = Depends(get_db_s
 @router.put("/api/profile", response_class=Response)
 def update_profile(new_profile: schemas.Profile,
                     authorization: str = Header(...),
-                    db: Session = Depends(get_db_session)):
+                    db: Session = Depends(session.get_db_session)):
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
     authorized = services.is_token_valid(token, db)
     if authorized==None or authorized==False:
@@ -97,7 +95,7 @@ def update_profile(new_profile: schemas.Profile,
 
 
 @router.get("/api/profile_photo", response_model=List[schemas.Photo])
-def get_photos(authorization: str = Header(...), db: Session = Depends(get_db_session)):
+def get_photos(authorization: str = Header(...), db: Session = Depends(session.get_db_session)):
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
     authorized = services.is_token_valid(token, db)
     if authorized==None or authorized==False:
@@ -112,7 +110,7 @@ def get_photos(authorization: str = Header(...), db: Session = Depends(get_db_se
 
 @router.get("/api/photo", response_model=List[schemas.Photo])
 def get_photos(profile: schemas.Profile,
-               authorization: str = Header(...), db: Session = Depends(get_db_session)):
+               authorization: str = Header(...), db: Session = Depends(session.get_db_session)):
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
     authorized = services.is_token_valid(token, db)
     if authorized==None or authorized==False:
@@ -125,7 +123,7 @@ def get_photos(profile: schemas.Profile,
 
 @router.post("/api/photo",  response_class=Response)
 def add_photo(photo: schemas.Photo, authorization: str = Header(...),
-               db: Session = Depends(get_db_session)):  #TODO: как света исправит метод доделать
+               db: Session = Depends(session.get_db_session)):  #TODO: как света исправит метод доделать
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
     authorized = services.is_token_valid(token, db)
     if authorized==None or authorized==False:
@@ -137,7 +135,7 @@ def add_photo(photo: schemas.Photo, authorization: str = Header(...),
 
 
 @router.post("/api/like", response_class=Response)
-def create_like(like: schemas.Like, authorization: str = Header(...), db: Session = Depends(get_db_session)): #TODO: как света исправит метод доделать
+def create_like(like: schemas.Like, authorization: str = Header(...), db: Session = Depends(session.get_db_session)): #TODO: как света исправит метод доделать
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
     authorized = services.is_token_valid(token, db)
     if authorized==None or authorized==False:
@@ -148,7 +146,7 @@ def create_like(like: schemas.Like, authorization: str = Header(...), db: Sessio
 
 
 @router.get("/api/like", response_model=List[schemas.Profile])
-def get_matches(authorization: str = Header(...), db: Session = Depends(get_db_session)): #TODO: как света исправит метод доделать
+def get_matches(authorization: str = Header(...), db: Session = Depends(session.get_db_session)): #TODO: как света исправит метод доделать
     token = authorization.split(" ")[1]  # Вытаскиваем токен после "Bearer"
     authorized = services.is_token_valid(token, db)
     if authorized==None or authorized==False:

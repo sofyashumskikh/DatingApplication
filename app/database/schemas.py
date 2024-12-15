@@ -8,7 +8,7 @@ class Token(pd.BaseModel):
     token: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class User(pd.BaseModel):
     # id: int
@@ -17,7 +17,7 @@ class User(pd.BaseModel):
     # password_hash : str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Profile(BaseSchema):
     name: str
@@ -31,18 +31,18 @@ class Profile(BaseSchema):
     nickname_tg: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Photo(BaseSchema):
     # profile_id: int
     photo_url: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Like(BaseSchema):
     # user_from_id: int
     user_id_to: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

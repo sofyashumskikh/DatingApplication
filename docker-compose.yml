@@ -1,22 +1,29 @@
-version: '3.8'
-
 services:
-  app:
-    build: ./app/
-    container_name: dating_app
-    ports:
-      - "7000:7000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/dating_database
-    depends_on:
-      - postgres
-
   postgres:
     image: postgres:13
-    container_name: dating_postgres
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: dating_database
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  dating_app:
+    build:
+      context: ./app
+    image: dating_app
+
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "7000:7000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/dating_database
+
+volumes:
+  pgdata:
+
+

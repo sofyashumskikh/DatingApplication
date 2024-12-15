@@ -1,3 +1,6 @@
 fastapi
 sqlalchemy
 pydantic
+psycopg2
+bcrypt
+uvicorn

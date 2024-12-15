@@ -1,7 +1,6 @@
 from _operator import or_, and_
-import schemas
-import session as dbase
-import datetime as dtime
+from . import schemas
+from . import session as dbase
 from typing import List
 import uuid #для токена
 import bcrypt # для токена

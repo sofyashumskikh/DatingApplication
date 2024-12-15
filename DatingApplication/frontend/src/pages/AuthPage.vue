@@ -18,30 +18,52 @@
 </template>
 
 <script>
-
-import { axios } from "axios";
-import { router } from "./router";
-
-axios.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.response && error.response.status === 401) {
-      router.push("login-page")
-    }
-    return Promise.reject(error);
-  }
-)
-
+import axios from "axios";
+import { useRouter } from "vue-router";
+import { ref } from "vue";
 export default {
   setup() {
-    return {
-      email: '',
-      password: '',
+    const router = useRouter();
+    const email = ref("");
+    const password = ref("");
+
+    // Перехватчик axios
+    axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          router.push("/auth");
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    const login = () => {
+      if (!email.value || !password.value) {
+        alert("Пожалуйста, заполните все поля.");
+        return;
+      }
+
+      axios
+        .post("/api/login", {
+          email: email.value,
+          password: password.value,
+        })
+        .then(() => {
+          alert("Успешно вошли!");
+          router.push("/"); // Перенаправить на главную
+        })
+        .catch((error) => {
+          console.error(error);
+          alert("Ошибка при входе. Проверьте введённые данные.");
+        });
     };
-  },
-  methods: {
-    login() {
-    },
+
+    return {
+      email,
+      password,
+      login,
+    };
   },
 };
 </script>
@@ -49,5 +71,5 @@ export default {
 <style lang="sass">
   .my-card
     width: 100%
-    max-width: 500px 
+    max-width: 500px
   </style>

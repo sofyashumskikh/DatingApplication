@@ -32,7 +32,7 @@
           <q-btn outline rounded color="primary" label="OK" @click="ok" style="margin-right: 200px;" />
           <q-btn outline rounded color="primary" label="Удалить аккаунт" @click="del" />
           <br>
-          <q-checkbox left-label v-model="left" label="удалить аккаунт"/>
+          <q-checkbox left-label v-model="left" label="удалить аккаунт" />
         </q-card-section>
       </q-card>
     </div>
@@ -41,24 +41,51 @@
 
 <script>
 
+import { useRouter } from "vue-router"
+import { useQuasar } from "quasar"
 import { ref } from "vue";
-
-const Name = ref("");
-const Surname = ref("");
-const Country = ref("");
-const Town = ref("");
-const Sex = ref("");
-const Age = ref("");
-const TgNick = ref("");
-const Description = ref("")
-
-const change = () => { };
-const add = () => { };
-const ok = () => { };
-const del = () => { };
+import axios from "axios";
 
 export default {
   setup() {
+
+    const $q = useQuasar();
+    const router = useRouter();
+    const Name = ref("");
+    const Surname = ref("");
+    const Country = ref("");
+    const Town = ref("");
+    const Sex = ref("");
+    const Age = ref("");
+    const TgNick = ref("");
+    const Description = ref("")
+
+    axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          router.push("/auth");
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    const change = () => { };
+    const add = () => { };
+    const ok = () => { };
+    const del = () => {
+      $q.dialog({
+        dark: true,
+        message: "Вы уверены, что хотите удалить аккаунт?",
+        cancel: true,
+        persistent: true
+      }).onOk(() => {
+        // удаляем аккаунт
+      }).onCancel(() => {
+        // ниче не делаем
+      })
+    };
+
     return {
       Name,
       Surname,

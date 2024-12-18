@@ -1,7 +1,7 @@
 <template>
   <div class="profile-page">
     <div class="text-center">
-      <h2>Редактирование профиля</h2>
+      <h2 style="color: whitesmoke;">Редактирование профиля</h2>
     </div>
     <div class="form-conteiner">
       <q-card class="my-card" style="width: 450px;">
@@ -9,8 +9,8 @@
           <q-img src="https://cdn.quasar.dev/img/parallax2.jpg" style="width: 450px; height: 450px"></q-img>
           <br>
           <div class="buttons-container">
-            <q-btn outlined rounded color="primary" label="изменить фото" @click="change" style="margin-right: 300px" />
-            <q-btn outlined rounded color="primary" label="добавить фото" @click="add" />
+            <q-btn outlined rounded color="lime-1" label="изменить фото" @click="change" style="margin-right: 300px" />
+            <q-btn outlined rounded color="lime-1" label="добавить фото" @click="add" />
           </div>
           <br>
           <q-input outlined label="Имя" v-model="Name" />
@@ -29,8 +29,8 @@
           <br>
           <q-input uutlined label="Обо мне" v-model="Description" />
           <br>
-          <q-btn outline rounded color="primary" label="OK" @click="ok" style="margin-right: 200px;" />
-          <q-btn outline rounded color="primary" label="Удалить аккаунт" @click="del" />
+          <q-btn outline rounded color="lime-1" label="OK" @click="ok" style="margin-right: 200px;" />
+          <q-btn outline rounded color="lime-1" label="Удалить аккаунт" @click="del" />
           <br>
           <q-checkbox left-label v-model="left" label="удалить аккаунт" />
         </q-card-section>

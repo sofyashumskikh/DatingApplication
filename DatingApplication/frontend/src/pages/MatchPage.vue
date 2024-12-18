@@ -1,6 +1,6 @@
 <template>
   <div class="text-center">
-    <h2>Совпадения</h2>
+    <h2 style="color: whitesmoke;">Совпадения</h2>
   </div>
   <div class="q-pa-md">
     <div class="q-col-gutter-md row items-start">
@@ -40,6 +40,6 @@ export default {
   top: 50%;
   left: 50%;
   margin-right: -50%;
-  transform: translate(-50%, -50%)
+  transform: translate(-50%, -50%);
 }
 </style>

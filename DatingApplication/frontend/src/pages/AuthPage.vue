@@ -1,7 +1,7 @@
 <template>
   <div class="login-page">
     <div class="text-center">
-      <h2>Авторизация</h2>
+      <h2 style="color: whitesmoke;">Авторизация</h2>
     </div>
     <div class="fixed-center" style="width: 450px;">
       <q-card class="my-card">
@@ -68,8 +68,10 @@ export default {
 };
 </script>
 
-<style lang="sass">
-  .my-card
-    width: 100%
-    max-width: 500px
-  </style>
+<style scoped>
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+</style>

@@ -1,6 +1,6 @@
 <template>
   <div class="text-center">
-    <h2 style="color: whitesmoke;">... кандидаты ...</h2>
+    <h2 style="color: whitesmoke;">Запросы на модерацию</h2>
   </div>
     <div class="q-pa-md">
       <div class="q-col-gutter-md row items-start">
@@ -20,11 +20,9 @@
         </div>
       </div>
       <div class="buttons-container">
-        <q-btn outline rounded color="primary" label="LIKE" @click="like" style="margin-right: 300px" />
-        <q-btn outline rounded color="primary" label="DISLIKE" @click="dislike" />
+        <q-btn outline rounded color="primary" label="заблокировать (1 день)" @click="ban" style="margin-right: 300px" />
+        <q-btn outline rounded color="primary" label="удалить аккаунт" @click="del" />
       </div>
-      <br>
-      <q-btn outline rounded color="primary" label="ПОЖАЛОВАТЬСЯ" @click="complaint" style="left: 42%;"/>
     </div>
 </template>
 
@@ -48,15 +46,13 @@ export default {
       }
     );
 
-    const like = () => { };
-    const dislike = () => { };
-    const complaint = () => { };
+    const ban = () => { };
+    const del = () => { };
 
     return {
       slide: ref(1),
-      like,
-      dislike,
-      complaint,
+      ban,
+      del,
     };
   },
 }
@@ -71,13 +67,6 @@ export default {
   left: 50%;
   margin-right: -50%;
   transform: translate(-50%, -50%);
-}
-
-.q-col-gutter-md {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-  padding-top: 50px;
 }
 
 .buttons-container {

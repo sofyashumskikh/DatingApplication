@@ -1,8 +1,18 @@
+from datetime import datetime
+
 import pydantic as pd
 
 class BaseSchema(pd.BaseModel):
     id : int
     token: str
+    role: str
+    moderated: bool
+    active: bool
+
+    # if moderated=true and active=true:
+    #     профиль изменен
+    # if moderated=true and active=false:
+    #     профиль дакеактивирован
 
 class Token(pd.BaseModel):
     token: str
@@ -34,15 +44,22 @@ class Profile(BaseSchema):
         from_attributes = True
 
 class Photo(BaseSchema):
-    # profile_id: int
     photo_url: str
+
 
     class Config:
         from_attributes = True
 
 class Like(BaseSchema):
-    # user_from_id: int
     user_id_to: int
+
+    class Config:
+        from_attributes = True
+
+class Complaint(BaseSchema):
+    profile_id_to: int
+    letter: str
+    data: datetime
 
     class Config:
         from_attributes = True

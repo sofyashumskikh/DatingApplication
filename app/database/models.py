@@ -18,6 +18,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(50), unique=True, nullable=False)
     password_hash = Column(String(256), nullable=False)
+    role = Column(String(10), default="user")
 
     tokens = relationship('Token', backref='users')
     profile = relationship('Profile', backref='users', uselist=False)
@@ -38,6 +39,7 @@ class Profile(Base):
     nickname_tg = Column(String(64))
     about_me = Column(String(300))
     active = Column(Boolean, default=True)
+    moderated = Column(Boolean, default=False)
 
     photos = relationship('Photo', backref='profile')
     country = relationship('Country')
@@ -71,3 +73,15 @@ class Photo(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     profile_id = Column(Integer, ForeignKey('profiles.id'))
     photo_url = Column(String(150))
+
+class Complaint(Base):
+    __tablename__ = 'complaints'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    profile_id_to = Column(Integer, ForeignKey('profile.id'), nullable=False)
+    letter = Column(String(300), nullable=False)
+    added_at = Column(DateTime, nullable=False)
+
+    profile = relationship('Profile', back_populates='complaints')
+
+

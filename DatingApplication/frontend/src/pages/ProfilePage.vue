@@ -6,12 +6,13 @@
     <div class="form-conteiner">
       <q-card class="my-card" style="width: 450px;">
         <q-card-section>
-          <q-img src="https://cdn.quasar.dev/img/parallax2.jpg" style="width: 450px; height: 450px"></q-img>
+          <q-img :src="profileImage" style="width: 400px; height: 400px"></q-img>
           <br>
           <div class="buttons-container">
-            <q-btn outlined rounded color="lime-1" label="изменить фото" @click="change" style="margin-right: 300px" />
-            <q-btn outlined rounded color="lime-1" label="добавить фото" @click="add" />
+            <q-btn outline rounded color="primary" label="изменить фото" @click="change" style="margin-right: 100px" />
+            <q-btn outline rounded color="primary" label="добавить фото" @click="add" />
           </div>
+          <input type="file" ref="fileInput" style="display: none" @change="changeFile">
           <br>
           <q-input outlined label="Имя" v-model="Name" />
           <br>
@@ -29,8 +30,8 @@
           <br>
           <q-input uutlined label="Обо мне" v-model="Description" />
           <br>
-          <q-btn outline rounded color="lime-1" label="OK" @click="ok" style="margin-right: 200px;" />
-          <q-btn outline rounded color="lime-1" label="Удалить аккаунт" @click="del" />
+          <q-btn outline rounded color="primary" label="OK" @click="ok" style="margin-right: 200px;" />
+          <q-btn outline rounded color="primary" label="Удалить аккаунт" @click="del" />
         </q-card-section>
       </q-card>
     </div>
@@ -57,6 +58,8 @@ export default {
     const Age = ref("");
     const TgNick = ref("");
     const Description = ref("")
+    const fileInput = ref(null);
+    const profileImage = ref("https://cdn.quasar.dev/img/parallax2.jpg");
 
     axios.interceptors.response.use(
       (response) => response,
@@ -68,8 +71,22 @@ export default {
       }
     );
 
-    const change = () => { };
-    const add = () => { };
+    const changeFile = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+              profileImage.value = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+    const change = () => {
+      fileInput.value.click();
+    };
+
+    const add = () => {};
     const ok = () => { };
     const del = () => {
       $q.dialog({
@@ -93,6 +110,9 @@ export default {
       Age,
       TgNick,
       Description,
+      fileInput,
+      profileImage,
+      changeFile,
       change,
       add,
       ok,
@@ -120,5 +140,10 @@ export default {
   display: flex;
   justify-content: center;
   margin-top: 20px;
+}
+
+.my-card {
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 </style>

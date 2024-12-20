@@ -3,6 +3,9 @@
     <div class="text-center">
       <h2 style="color: whitesmoke;">Авторизация</h2>
     </div>
+    <div class="exit-container">
+      <q-btn outline rounded color="lime-2" label="Назад" @click="logout" />
+    </div>
     <div class="fixed-center" style="width: 450px;">
       <q-card class="my-card">
         <q-card-section>
@@ -59,10 +62,16 @@ export default {
         });
     };
 
+    const logout = () => {
+      localStorage.removeItem('token')
+      router.push("/");
+    };
+
     return {
       email,
       password,
       login,
+      logout,
     };
   },
 };
@@ -73,5 +82,10 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.exit-container {
+  position: absolute;
+  top: 5%;
+  right: 5%;
 }
 </style>

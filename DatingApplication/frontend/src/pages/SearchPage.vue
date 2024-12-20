@@ -1,3 +1,4 @@
+
 <template>
   <div class="text-center">
     <h2 style="color: whitesmoke;">Просмотр претендентов</h2>
@@ -65,6 +66,8 @@ export default {
     const like = () => { };
     const dislike = () => { };
     const complaint = () => { };
+    // проверОчка, если нет подходящих кандидатов
+    // время сеанса истекло, авторизуемся заново
 
     return {
       slide: ref(1),

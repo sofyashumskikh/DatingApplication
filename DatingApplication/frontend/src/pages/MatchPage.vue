@@ -17,6 +17,13 @@
         </q-card>
       </div>
     </div>
+    <div class="arrow-buttons">
+      <q-btn icon="arrow_back_ios" round flat @click="prevPage" class="arrow-button" />
+      <q-btn icon="arrow_forward_ios" round flat @click="nextPage" class="arrow-button" />
+    </div>
+  </div>
+  <div class="text-center">
+    <p>Поздравляем, у вас есть совпадение!</p>
   </div>
 </template>
 
@@ -43,3 +50,6 @@ export default {
   transform: translate(-50%, -50%);
 }
 </style>
+
+<!-- TODO :
+добавить стрелочки  -->

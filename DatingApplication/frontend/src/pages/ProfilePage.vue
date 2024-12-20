@@ -31,8 +31,6 @@
           <br>
           <q-btn outline rounded color="lime-1" label="OK" @click="ok" style="margin-right: 200px;" />
           <q-btn outline rounded color="lime-1" label="Удалить аккаунт" @click="del" />
-          <br>
-          <q-checkbox left-label v-model="left" label="удалить аккаунт" />
         </q-card-section>
       </q-card>
     </div>

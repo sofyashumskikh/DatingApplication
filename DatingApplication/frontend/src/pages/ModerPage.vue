@@ -1,6 +1,9 @@
 <template>
   <div class="text-center">
-    <h2 style="color: whitesmoke;">Запросы на модерацию</h2>
+    <h2 style="color: whitesmoke;">Модерация профилей</h2>
+  </div>
+  <div class="exit-container">
+    <q-btn class="logout-button" color="red" label="Выход" @click="logout"/>
   </div>
     <div class="q-pa-md">
       <div class="q-col-gutter-md row items-start">
@@ -20,8 +23,8 @@
         </div>
       </div>
       <div class="buttons-container">
-        <q-btn outline rounded color="primary" label="заблокировать (1 день)" @click="ban" style="margin-right: 300px" />
-        <q-btn outline rounded color="primary" label="удалить аккаунт" @click="del" />
+        <q-btn outline rounded color="primary" label="просмотр жалоб" @click="view" style="margin-right: 300px" />
+        <q-btn outline rounded color="primary" label="редактирование профиля" @click="edit" />
       </div>
     </div>
 </template>
@@ -46,13 +49,18 @@ export default {
       }
     );
 
-    const ban = () => { };
-    const del = () => { };
+    const view = () => { };
+    const edit = () => { };
+    const logout = () => {
+      localStorage.removeItem('token')
+      router.push("/auth");
+    };
 
     return {
       slide: ref(1),
-      ban,
-      del,
+      view,
+      edit,
+      logout,
     };
   },
 }
@@ -74,4 +82,14 @@ export default {
   justify-content: center;
   margin-top: 20px;
 }
+
+.logout-button {
+  position: absolute;
+  top: 5%;
+  right: 7%;
+}
+
 </style>
+
+<!-- TODO :
+добавить всплывающее окно -->

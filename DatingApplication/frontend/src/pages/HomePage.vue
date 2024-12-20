@@ -1,5 +1,9 @@
 <template>
-  <p>Добро пожаловать в наше приложения для знакомств, располагайтесь поудобнее и начинайте искать!</p>
+  <div class="text-container">
+  <p>Добро пожаловать в наше приложение для знакомств! Здесь вы сможете найти новых друзей, единомышленников и, возможно, свою вторую половинку.
+    Просто зарегистрируйтесь и начните искать! Мы предлагаем удобный интерфейс и множество возможностей для общения. Независимо от того, какие
+    у вас интересы или цели, у нас вы найдете то, что ищете. Присоединяйтесь к нам и откройте для себя новые горизонты!</p>
+  </div>
   <div class="home">
     <q-btn outline rounded color="lime-1" label="Войти" @click="goToAuthPage" style="width: 200px; height: 20px;" />
     <br>
@@ -35,9 +39,18 @@ export default {
   transform: translate(-50%, -50%);
 }
 
+.text-container {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-radius: 50px;
+  margin-top: 5%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
 p {
   text-align: center;
-  font-size: xx-large;
+  font-size: x-large;
   color: whitesmoke;
   margin-left: 20px;
   margin-right: 20px;

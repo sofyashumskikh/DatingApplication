@@ -27,14 +27,14 @@
       <q-btn outline rounded color="primary" label="редактирование профиля" @click="edit" />
     </div>
   </div>
-  <q-dialog v-model="complaintsDialogVisible" @hide="complaintsDialogVisible = false">
+  <q-dialog v-model="isDialogVisible" @hide="isDialogVisible = false">
     <q-card style="width: 700px; max-width: 80vw;">
       <q-card-section>
         <div class="text-h6">Жалобы</div>
       </q-card-section>
       <q-card-section class="scroll">
         <q-list>
-          <q-item v-for="(complaint, index) in complaints" :key="index" clickable @click="goToProfile(complaint.user_id)">
+          <q-item v-for="(complaint, index) in complaints" :key="index">
             <q-item-section>
               <q-item-label>
                 дата и время: {{ complaint.date_time }}
@@ -92,16 +92,14 @@ export default {
     const view = () => {
       isDialogVisible.value = true;
     };
-    const edit = () => { };
+
+    const edit = () => {
+      router.push("/profile");
+    };
+
     const logout = () => {
       localStorage.removeItem('token')
       router.push("/");
-    };
-
-    const goToProfile = (userId) => {
-         console.log("Переход к профилю пользователя с id:", userId);
-         router.push(`/profile/${userId}`);
-         isDialogVisible.value = false;
     };
 
     return {
@@ -111,7 +109,6 @@ export default {
       view,
       edit,
       logout,
-      goToProfile,
     };
   },
 }

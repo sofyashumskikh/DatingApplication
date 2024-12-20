@@ -87,19 +87,74 @@ export default {
     };
 
     const add = () => {};
-    const ok = () => { };
-    const del = () => {
-      $q.dialog({
-        dark: true,
-        message: "Вы уверены, что хотите удалить аккаунт?",
-        cancel: true,
-        persistent: true
-      }).onOk(() => {
-        // удаляем аккаунт
-      }).onCancel(() => {
-        // ниче не делаем
-      })
+
+    const ok = () => {
+        const profileData = {
+            Name: Name.value,
+            Surname: Surname.value,
+            Country: Country.value,
+            Town: Town.value,
+            Sex: Sex.value,
+            Age: Age.value,
+            TgNick: TgNick.value,
+            Description: Description.value,
+            profileImage: profileImage.value,
+        };
+      console.log("Данные профиля для сохранения:", profileData);
+      // Здесь должна быть отправка данных на сервер
     };
+
+    const del = () => {
+        $q.dialog({
+            title: 'Подтвердите удаление',
+            message: 'Вы уверены, что хотите удалить свой аккаунт?',
+            cancel: true,
+            persistent: true
+        }).onOk(() => {
+            deleteAccount();
+        })
+    };
+
+    const deleteAccount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.error("Токен не найден. Пользователь не авторизован.");
+        router.push('/');
+        return;
+      }
+
+      const response = await axios.delete("/api/users/me", {
+         headers: {
+           Authorization: `Bearer ${token}`,
+         },
+        });
+
+      if (response.status === 200) {
+        console.log("Аккаунт успешно удален!");
+
+        localStorage.removeItem("token");
+
+        router.push("/");
+      } else {
+        console.error("Ошибка при удалении аккаунта:", response);
+          $q.notify({
+            message: "Ошибка при удалении аккаунта",
+            color: "negative",
+          });
+      }
+    } catch (error) {
+      console.error("Произошла ошибка при удалении аккаунта:", error);
+        $q.notify({
+          message: "Произошла ошибка при удалении аккаунта",
+            color: "negative",
+          });
+      if (error.response && error.response.status === 401) {
+        router.push('/');
+      }
+    }
+  };
 
     return {
       Name,

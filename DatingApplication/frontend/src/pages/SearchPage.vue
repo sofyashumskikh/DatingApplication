@@ -1,16 +1,10 @@
-
 <template>
   <div class="text-center">
     <h2 style="color: whitesmoke;">Просмотр претендентов</h2>
   </div>
   <div class="checkmark-container">
     <q-icon name="check" color="green" size="6em" />
-    <!-- <q-icon name="close" color="red" size="6em"/> -->
   </div>
-  <!-- <div class="sort-container">
-    <q-select v-model="selectedSort" :options="sortOptions" label="Сортировать по" style="width: 200px; right: 0%;"
-      class="sort-menu" />
-  </div> -->
   <div class="q-pa-md">
     <div class="q-col-gutter-md row items-start">
       <div class="col-6">
@@ -46,12 +40,7 @@ export default {
   setup() {
 
     const router = useRouter();
-    // const selectedSort = ref(null);
-    // const sortOptions = ref([
-    //   { label: "По умолчанию", value: "default" },
-    //   { label: "По возрасту", value: "age" },
-    //   { label: "По стране", value: "country" }
-    // ]);
+    const slide = ref(1);
 
     axios.interceptors.response.use(
       (response) => response,
@@ -63,19 +52,15 @@ export default {
       }
     );
 
-    const like = () => { };
-    const dislike = () => { };
-    const complaint = () => { };
-    // проверОчка, если нет подходящих кандидатов
-    // время сеанса истекло, авторизуемся заново
+    const like = () => {};
+    const dislike = () => {};
+    const complaint = () => {};
 
     return {
-      slide: ref(1),
+      slide,
       like,
       dislike,
       complaint,
-      //selectedSort,
-      //sortOptions,
     };
   },
 }
@@ -110,19 +95,6 @@ export default {
   top: 5%;
   right: 7%;
 }
-/*
-.sort-container {
-  position: relative;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding-right: 5%;
-}
-
-.sort-menu {
-  margin-top: 20px;
-}
-*/
 </style>
 
 <!-- TODO :

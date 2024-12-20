@@ -88,11 +88,16 @@ def is_token_valid(token: str, db: "Session") -> Optional[bool]: #проверя
         return False
     return True
 
-# def profile_is_moderated (token: str , db: "Session") -> bool: #проверять перед любым действием
-#     return get_profile_by_token(token, db).moderated
-#def profile_is_active (token: str , db: "Session") -> bool:
-    #return get_profile_by_token(token, db).active
-
+def get_moderated_by_token(token: str, db: "Session") -> Optional[bool]:
+    profile=get_profile_by_token(token, db)
+    if not profile:
+        return None
+    return profile.moderated
+def get_active_by_token(token: str, db: "Session") -> Optional[bool]:
+    profile=get_profile_by_token(token, db)
+    if not profile:
+        return None
+    return profile.active
 
 def get_user_id_by_token(token: str, db: "Session") -> Optional[int]:
     token_record = db.query(dbase.m.Token).filter(dbase.m.Token.token == token).first()
@@ -142,7 +147,6 @@ def get_profile_by_token(token: str, db: "Session") -> Optional[schemas.Profile]
     user_id = get_user_id_by_token(token, db)
     if not user_id:
         return None
-
     profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id == user_id).first()
     return schemas.Profile.from_orm(profile) if profile else None
 
@@ -240,8 +244,10 @@ def get_match(token: str, db: "Session") -> List[schemas.Profile]:
     return [schemas.Profile.from_orm(profile) for profile in profiles_match]
 #_________________________________________________________
 #Логика для жалоб
-def create_complaint (complaint: schemas.Complaint, db: "Session") -> bool: #пользователь написал жалобу
-    # TODO: Проверить что профиль существует с таким id и вернуть false если нет
+def create_complaint (complaint: schemas.Complaint, db: "Session") -> bool:
+    profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.id== complaint.profile_id_to).first()
+    if not profile:
+        return False
 
     new_complaint = dbase.m.Complaint(
         profile_id_to = complaint.profile_id_to,
@@ -342,14 +348,23 @@ def get_complaint_count(profile_id: int, db: "Session") -> int: #получен�
 
 def get_all_profiles_by_moderator(db: "Session") -> List[schemas.Profile]: #получение списка для просмотра профилей
     profiles = db.query(dbase.m.Profile).filter(dbase.m.Profile.active == True).all()
-    profiles_with_complaint_count = sorted(
+    profiles_sorted = sorted(
         profiles,
         key=lambda profile: get_complaint_count(profile.id, db),
         reverse=True
     )
-    return profiles_with_complaint_count
+    return [schemas.Profile.from_orm(profile) for profile in profiles_sorted] #TODO проверить
 
-# TODO: метод чтобы получить жалобы по профилю
+def get_list_of_complaint (profile_id: int, db: "Session") -> List[schemas.Complaint]:
+    complaint = db.query(dbase.m.Complaint).filter(dbase.m.Complaint.profile_id_to == profile_id).all()
+    complaints = (
+        db.query(dbase.m.Complaint)
+        .filter(dbase.m.Complaint.profile_id_to == profile_id)
+        .order_by(dbase.m.Complaint.added_at.desc())
+        .all()
+    )
+    return [schemas.Complaint.from_orm(complaint) for complaint in complaints] # TODO проверить
+
 
 def delete_complaints_for_profile(profile_id: int, db: "Session") -> bool: #удаление списка жалоб после просмотра
     try:
@@ -362,7 +377,6 @@ def delete_complaints_for_profile(profile_id: int, db: "Session") -> bool: #уд
         db.rollback()
         return False
 
-# TODO: методы чтобы вернуть moderated и active по токену
 
 def update_profile_by_moderator(profile: schemas.Profile, db: "Session") -> int: #редактирование профиля
     db_profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile.id).first()

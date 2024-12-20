@@ -24,6 +24,7 @@ services:
       - DATABASE_URL=postgresql://user:password@postgres:5432/dating_database
 
 volumes:
+#  - ./app:/app
   pgdata:
 
 

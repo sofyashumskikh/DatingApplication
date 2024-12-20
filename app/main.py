@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from database.session import main_engine
 from database import models
+
 from routes import routes  # Импортируем маршруты
 import uvicorn
+from sqlalchemy.orm import Session
+
+
+from fastapi.responses import JSONResponse 
 
 models.Base.metadata.create_all(bind=main_engine) # Создать все таблицы в базе данных, которые описаны в моделях SQLAlchemy, если их ещё нет. Этот метод вызывает создание всех таблиц, указанных в классе Base, который является базовым для всех моделей.
 

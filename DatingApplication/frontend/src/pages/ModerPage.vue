@@ -9,15 +9,13 @@
     <div class="q-col-gutter-md row items-start">
       <div class="col-6">
         <q-carousel animated v-model="slide" arrows navigation infinite style="width: 450px; height: 450px;">
-          <q-carousel-slide :name="1" img-src="https://cdn.quasar.dev/img/parallax2.jpg" />
-          <q-carousel-slide :name="2" img-src="https://cdn.quasar.dev/img/parallax1.jpg" />
-          <q-carousel-slide :name="3" img-src="https://cdn.quasar.dev/img/mountains.jpg" />
+          <q-carousel-slide v-for="profile in profiles" :key="profile.id" :name="profile.id" :img-src="profile.image" />
         </q-carousel>
       </div>
       <div class="col-6">
-        <q-card style="width: 450px; height: 450px">
-          <div class="text-center">
-            <p style="font-size: xx-large;">text<br>text</p>
+        <q-card class="profile-card">
+          <div class="text-center profile-text">
+            <p style="font-size: xx-large;">{{ currentProfile.text }}</p>
           </div>
         </q-card>
       </div>
@@ -142,6 +140,3 @@ export default {
   overflow-y: auto;
 }
 </style>
-
-<!-- TODO :
-добавить всплывающее окно -->

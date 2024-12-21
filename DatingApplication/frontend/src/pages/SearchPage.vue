@@ -4,20 +4,19 @@
   </div>
   <div class="checkmark-container">
     <q-icon name="check" color="green" size="6em" />
+    <!-- <q-icon name="close" color="red" size="6em"/> -->
   </div>
   <div class="q-pa-md">
     <div class="q-col-gutter-md row items-start">
       <div class="col-6">
         <q-carousel animated v-model="slide" arrows navigation infinite style="width: 450px; height: 450px;">
-          <q-carousel-slide :name="1" img-src="https://cdn.quasar.dev/img/parallax2.jpg" />
-          <q-carousel-slide :name="2" img-src="https://cdn.quasar.dev/img/parallax1.jpg" />
-          <q-carousel-slide :name="3" img-src="https://cdn.quasar.dev/img/mountains.jpg" />
+          <q-carousel-slide v-for="profile in profiles" :key="profile.id" :name="profile.id" :img-src="profile.image" />
         </q-carousel>
       </div>
       <div class="col-6">
-        <q-card style="width: 450px; height: 450px">
-          <div class="text-center">
-            <p style="font-size: xx-large;">text<br>text</p>
+        <q-card class="profile-card">
+          <div class="text-center profile-text">
+            <p style="font-size: xx-large;">{{ currentProfile.text }}</p>
           </div>
         </q-card>
       </div>
@@ -27,8 +26,20 @@
       <q-btn outline rounded color="primary" label="DISLIKE" @click="dislike" />
     </div>
     <br>
-    <q-btn outline rounded color="primary" label="ПОЖАЛОВАТЬСЯ" @click="complaint" style="left: 42%;" />
+    <q-btn outline rounded color="primary" label="ПОЖАЛОВАТЬСЯ" @click="openComplaintDialog" style="left: 42%;" />
   </div>
+  <q-dialog v-model="showComplaintDialog">
+    <q-card style="width: 300px;">
+      <q-card-section>
+        <div class="text-h6">Опишите вашу жалобу</div>
+        <q-input outlined v-model="complaintText" type="textarea" />
+      </q-card-section>
+      <q-card-actions>
+        <q-btn label="Отмена" outline rounded color="primary" v-close-popup style="margin-left: 50px;" />
+        <q-btn label="Отправить" outline rounded color="negative" @click="sendComplaint" style="margin-left: 25px;" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
@@ -41,6 +52,9 @@ export default {
 
     const router = useRouter();
     const slide = ref(1);
+    const showComplaintDialog = ref(false);
+    const complaintText = ref("");
+    const userId = 1;
 
     axios.interceptors.response.use(
       (response) => response,
@@ -52,19 +66,69 @@ export default {
       }
     );
 
-    const like = () => {};
-    const dislike = () => {};
-    const complaint = () => {};
+    const openComplaintDialog = () => {
+      showComplaintDialog.value = true;
+      complaintText.value = "";
+    };
+
+    const like = async () => {
+      try {
+        const response = await axios.post("/api/like", {
+          userId: userId,
+        });
+        if (response.status === 200) {
+          console.log("Like was successful");
+        } else {
+          console.error("Like failed, server returned:", response.status);
+        }
+      } catch (error) {
+        console.error("Error during like action:", error);
+      }
+    };
+
+    const dislike = async () => {
+      try {
+        const response = await axios.post("/api/dislike", {
+          userId: userId,
+        });
+        if (response.status === 200) {
+          console.log("Dislike was successful");
+        } else {
+          console.error("Dislike failed, server returned:", response.status);
+        }
+      } catch (error) {
+        console.error("Error during dislike action:", error);
+      }
+    };
+
+    const sendComplaint = async () => {
+      try {
+        const response = await axios.post("/api/complaint", {
+          userId: userId,
+          text: complaintText.value
+        });
+        if (response.status === 200) {
+          console.log("Complaint was successful");
+          showComplaintDialog.value = false;
+        } else {
+          console.error("Complaint failed, server returned:", response.status);
+        }
+      } catch (error) {
+        console.error("Error during complaint action:", error);
+      }
+    };
 
     return {
       slide,
       like,
       dislike,
-      complaint,
+      complaintText,
+      showComplaintDialog,
+      openComplaintDialog,
+      sendComplaint,
     };
   },
 }
-
 </script>
 
 <style scoped>
@@ -96,6 +160,3 @@ export default {
   right: 7%;
 }
 </style>
-
-<!-- TODO :
-добавить всплывающие уведомления  -->

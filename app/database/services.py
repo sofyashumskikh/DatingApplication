@@ -1,5 +1,5 @@
 from _operator import or_, and_
-import dtime
+import datetime
 from . import schemas
 from . import session as dbase
 from typing import List
@@ -37,7 +37,7 @@ def create_token(user_id : int, db: "Session") -> Optional[str]:
     if token_record:
         return None
     token = str(uuid.uuid4())
-    new_token = dbase.m.Token(user_id=user_id, token=token, update_at=dtime.datetime.now(dtime.timezone.utc))
+    new_token = dbase.m.Token(user_id=user_id, token=token, update_at=datetime.datetime.now(datetime.timezone.utc))
     db.add(new_token)
     db.commit()
     db.refresh(new_token)
@@ -82,8 +82,8 @@ def is_token_valid(token: str, db: "Session") -> Optional[bool]: #проверя
     if not token_record : # проверка существования токена
         return None
 
-    current_time = dtime.datetime.now(dtime.timezone.utc)   #проверка срока годности токена
-    expiration_time = token_record.update_at + dtime.timedelta(hours=24)
+    current_time = datetime.datetime.now(datetime.timezone.utc)   #проверка срока годности токена
+    expiration_time = token_record.update_at + datetime.timedelta(hours=24)
     if current_time > expiration_time:
         return False
     return True
@@ -253,7 +253,7 @@ def create_complaint (complaint: schemas.Complaint, db: "Session") -> bool:
     new_complaint = dbase.m.Complaint(
         profile_id_to = complaint.profile_id_to,
         letter= complaint.letter,
-        added_at = dtime.datetime.now(dtime.timezone.utc)
+        added_at = datetime.datetime.now(datetime.timezone.utc)
     )
 
     db.add(new_complaint)
@@ -354,7 +354,7 @@ def get_all_profiles_by_moderator(db: "Session") -> List[schemas.Profile]: #по
         key=lambda profile: get_complaint_count(profile.id, db),
         reverse=True
     )
-    return [schemas.Profile.from_orm(profile) for profile in profiles_sorted] #TODO проверить
+    return [schemas.Profile.from_orm(profile) for profile in profiles_sorted] #TODO: проверить
 
 def get_list_of_complaint (profile_id: int, db: "Session") -> List[schemas.Complaint]:
     complaint = db.query(dbase.m.Complaint).filter(dbase.m.Complaint.profile_id_to == profile_id).all()
@@ -364,7 +364,7 @@ def get_list_of_complaint (profile_id: int, db: "Session") -> List[schemas.Compl
         .order_by(dbase.m.Complaint.added_at.desc())
         .all()
     )
-    return [schemas.Complaint.from_orm(complaint) for complaint in complaints] # TODO проверить
+    return [schemas.Complaint.from_orm(complaint) for complaint in complaints] # TODO: проверить
 
 
 def delete_complaints_for_profile(profile_id: int, db: "Session") -> bool: #удаление списка жалоб после просмотра

@@ -208,6 +208,7 @@ def save_file(photo: UploadFile) -> Optional[str]:
         with open(file_path, "wb") as f:
             f.write(photo.file.read())
     except Exception as e:
+        print("ERROR: ", e)
         return None
 
     # Формируем URL для файла
@@ -227,8 +228,11 @@ def create_photo(token: str, url: str, db: Session) -> Optional[schemas.Photo]:
 
 def delete_photo(photo_id: int, db: Session) -> bool:
     db_photo = db.query(dbase.m.Photo).filter(dbase.m.Photo.id == photo_id).first()
+
     photo_name = db_photo.photo_url.split("/")[-1]
-    os.remove(f"{routes.UPLOAD_DIRECTORY}{photo_name}")
+    file_path = f"{routes.UPLOAD_DIRECTORY}{photo_name}"
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
     db.query(dbase.m.Photo).filter(dbase.m.Photo.id == photo_id).delete()  # Удаляем фото
     db.commit()  # Применяем изменения в базе
@@ -355,7 +359,9 @@ def delete_user_photos(profile_id: int, db: Session) -> bool:
     db_photos = db.query(dbase.m.Photo).filter(dbase.m.Photo.profile_id == profile_id).all()
     for db_photo in db_photos:
         photo_name = db_photo.photo_url.split("/")[-1]
-        os.remove(f"{routes.UPLOAD_DIRECTORY}{photo_name}")
+        file_path=f"{routes.UPLOAD_DIRECTORY}{photo_name}"
+        if os.path.exists(file_path):
+            os.remove(file_path)
     db.query(dbase.m.Photo).filter(dbase.m.Photo.profile_id == profile_id).delete()
     return True
 
@@ -387,13 +393,14 @@ def delete_user_fully(user_id: int, db: Session) -> bool:
         profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id == user_id).first()
         if profile:
             delete_user_photos(profile.id, db)
-            delete_user_profile(profile.id, db)
             delete_complaints_for_profile(profile.id, db)
+            delete_user_profile(profile.id, db)
 
         delete_user(user_id, db)
         return True
 
     except SQLAlchemyError as e:
+        print("ERROR: ", e)
         db.rollback()
         return False
 
@@ -439,7 +446,7 @@ def delete_complaints_for_profile(profile_id: int, db: Session) -> bool: #уда
         return True
 
     except SQLAlchemyError as e:
-        # В случае ошибки откатываем транзакцию
+        print("ERROR: ", e)
         db.rollback()
         return False
 

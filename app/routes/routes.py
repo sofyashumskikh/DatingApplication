@@ -389,7 +389,7 @@ def delete_photo(token: str, photo_id: int, response: Response, db: Session = De
         profile = services.get_profile_by_token(token, db)
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
-        photo_ids = set(p.id for p in get_photos(profile.id, db))
+        photo_ids = set(p.id for p in services.get_photos(profile.id, db))
         if photo_id in photo_ids:
             services.delete_photo(photo_id, db)
         else:

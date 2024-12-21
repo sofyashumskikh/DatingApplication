@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
+from . import models as m
 
 # Создание движка базы данных
 main_engine = sa.create_engine(

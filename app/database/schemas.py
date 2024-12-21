@@ -9,10 +9,6 @@ class BaseSchema(pd.BaseModel):
     moderated: bool
     active: bool
 
-    # if moderated=true and active=true:
-    #     профиль изменен
-    # if moderated=true and active=false:
-    #     профиль дакеактивирован
 
 class Token(pd.BaseModel):
     token: str

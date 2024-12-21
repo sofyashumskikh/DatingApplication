@@ -4,7 +4,6 @@
   </div>
   <div class="checkmark-container">
     <q-icon name="check" color="green" size="6em" />
-    <!-- <q-icon name="close" color="red" size="6em"/> -->
   </div>
   <div class="q-pa-md">
     <div class="q-col-gutter-md row items-start">
@@ -45,7 +44,8 @@
 <script>
 import { useRouter } from "vue-router";
 import axios from "axios";
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
+
 
 export default {
   setup() {
@@ -55,6 +55,26 @@ export default {
     const showComplaintDialog = ref(false);
     const complaintText = ref("");
     const userId = 1;
+    const profiles = ref([]);
+
+    const currentProfile = computed(() => {
+      const found = profiles.value.find(p => p.id === slide.value);
+      return found || { text: '' };
+    });
+
+    const getProfiles = async () => {
+      try {
+        const response = await axios.get("/api/profiles");
+        profiles.value = response.data;
+        if (profiles.value.length > 0) {
+          slide.value = profiles.value[0].id;
+        }
+      } catch (error) {
+        console.error("Failed to fetch profiles", error);
+      }
+    };
+
+    onMounted(getProfiles);
 
     axios.interceptors.response.use(
       (response) => response,
@@ -118,10 +138,13 @@ export default {
       }
     };
 
+
     return {
       slide,
       like,
       dislike,
+      profiles,
+      currentProfile,
       complaintText,
       showComplaintDialog,
       openComplaintDialog,
@@ -129,6 +152,7 @@ export default {
     };
   },
 }
+
 </script>
 
 <style scoped>
@@ -158,5 +182,18 @@ export default {
   position: absolute;
   top: 5%;
   right: 7%;
+}
+
+.profile-card {
+  width: 450px;
+  height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.profile-text {
+  padding: 16px;
 }
 </style>

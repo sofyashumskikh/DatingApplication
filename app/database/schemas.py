@@ -1,14 +1,9 @@
 from datetime import datetime
-
 import pydantic as pd
+from typing import Optional
 
 class BaseSchema(pd.BaseModel):
     id : int
-    token: str
-    role: str
-    moderated: bool
-    active: bool
-
 
 class Token(pd.BaseModel):
     token: str
@@ -17,24 +12,24 @@ class Token(pd.BaseModel):
         from_attributes = True
 
 class User(pd.BaseModel):
-    # id: int
     email : str
     password: str
-    # password_hash : str
 
     class Config:
         from_attributes = True
 
 class Profile(BaseSchema):
+    user_id: int
     name: str
     surname: str
-    country_name: str
-    city_name: str
+    country_name: Optional[str] = None
+    city_name: Optional[str] = None
     gender: bool
     age: int
-    active: bool
+    active: Optional[bool] = None
     about_me: str
-    nickname_tg: str
+    nickname_tg: Optional[str] = None
+    complaints_count: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -45,7 +40,7 @@ class Photo(BaseSchema):
     class Config:
         from_attributes = True
 
-class Like(BaseSchema):
+class Like(pd.BaseModel):
     user_id_to: int
 
     class Config:
@@ -54,7 +49,7 @@ class Like(BaseSchema):
 class Complaint(BaseSchema):
     profile_id_to: int
     letter: str
-    data: datetime
+    added_at: datetime
 
     class Config:
         from_attributes = True

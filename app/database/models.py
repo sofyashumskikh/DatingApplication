@@ -19,11 +19,13 @@ class User(Base):
     email = Column(String(50), unique=True, nullable=False)
     password_hash = Column(String(256), nullable=False)
     role = Column(String(10), default="user")
+    moderated = Column(Boolean, default=False)
+    active = Column(Boolean, default=True)
 
     tokens = relationship('Token', backref='users')
     profile = relationship('Profile', backref='users', uselist=False)
-    likes_from = relationship('Like', foreign_keys='Like.user_from_id', back_populates='user_from')
-    likes_to = relationship('Like', foreign_keys='Like.user_to_id', back_populates='user_to')
+    likes_from = relationship('Like', foreign_keys='Like.user_id_from', back_populates='user_from')
+    likes_to = relationship('Like', foreign_keys='Like.user_id_to', back_populates='user_to')
 
 class Profile(Base):
     __tablename__ = 'profiles'
@@ -38,12 +40,11 @@ class Profile(Base):
     age = Column(Integer)
     nickname_tg = Column(String(64))
     about_me = Column(String(300))
-    active = Column(Boolean, default=True)
-    moderated = Column(Boolean, default=False)
 
     photos = relationship('Photo', backref='profile')
     country = relationship('Country')
     city = relationship('City')
+    complaints = relationship('Complaint', back_populates='profile')
 
 class City(Base):
     __tablename__ = 'cities'
@@ -78,7 +79,7 @@ class Complaint(Base):
     __tablename__ = 'complaints'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    profile_id_to = Column(Integer, ForeignKey('profile.id'), nullable=False)
+    profile_id_to = Column(Integer, ForeignKey('profiles.id'), nullable=False)
     letter = Column(String(300), nullable=False)
     added_at = Column(DateTime, nullable=False)
 

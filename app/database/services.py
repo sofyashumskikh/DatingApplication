@@ -233,6 +233,7 @@ def get_match(token: str, db: "Session") -> List[schemas.Profile]:
         dbase.m.Like.user_id_to == user_id
     ).all()
 
+    # TODO: Отфильтровать user_ids_to по активным профилям
     user_ids_to = set(l.user_id_to for l in likes_from)
     user_ids_from = set(l.user_id_from for l in likes_to)
 

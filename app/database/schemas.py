@@ -46,7 +46,6 @@ class Profile(BaseSchema):
 class Photo(BaseSchema):
     photo_url: str
 
-
     class Config:
         from_attributes = True
 

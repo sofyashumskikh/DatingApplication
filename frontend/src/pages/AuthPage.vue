@@ -69,7 +69,12 @@ export default {
           console.log('Active:', active)
           console.log('Moderated:', moderated)
           console.log('Role:', role)
-          router.push('/app/search')
+          if (role == "user") {
+            router.push('/app/search')
+          }
+          else {
+            router.push('/app/search')
+          }
         })
         .catch((error) => {
           const statusCode = error.response.status

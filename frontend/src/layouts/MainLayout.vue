@@ -1,23 +1,8 @@
 <template>
   <q-layout view="lHh Lpr lFf">
         <!-- Header с кнопкой выхода для админа -->
-        <q-header v-if="role===moderator" elevated>
-      <q-toolbar>
-        <q-toolbar-title>
-          Модератор
-        </q-toolbar-title>
 
-        <!-- Показываем кнопку выхода только для админа -->
-        <q-btn
-          v-if="role === 'admin'"
-          flat
-          icon="exit_to_app"
-          @click="logout"
-          class="q-ml-auto"
-        />
-      </q-toolbar>
-    </q-header>
-    <q-drawer v-if="role === 'user'"
+    <q-drawer
       :model-value="true"
       show-if-above
       :mini="miniOpen"

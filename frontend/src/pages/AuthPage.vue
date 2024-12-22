@@ -1,31 +1,20 @@
 <template>
   <div class="login-page">
     <div class="text-center">
-      <h2>Авторизация</h2>
+      <h2 style="color: whitesmoke;">Авторизация</h2>
     </div>
-    <div class="fixed-center" style="width: 450px">
+    <div class="exit-container">
+      <q-btn outline rounded color="lime-2" label="Назад" @click="logout" />
+    </div>
+    <div class="fixed-center" style="width: 450px;">
       <q-card class="my-card">
         <q-card-section>
           <q-input outlined label="Email" v-model="email" />
-          <br />
+          <br>
           <q-input outlined label="Password" v-model="password" type="password" />
-          <br />
-          <q-btn
-            v-if="from === 'login'"
-            outline
-            rounded
-            color="primary"
-            label="Login"
-            @click="login"
-          />
-          <q-btn
-            v-if="from === 'register'"
-            outline
-            rounded
-            color="primary"
-            label="Register"
-            @click="register"
-          />
+          <br>
+          <q-btn v-if="from === 'login'"  outline rounded color="primary" label="Login" @click="login" />
+          <q-btn v-if="from === 'register'" outline rounded color="primary" label="Register" @click="register" />
         </q-card-section>
       </q-card>
     </div>
@@ -33,38 +22,32 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { useRouter, useRoute } from 'vue-router'
-import { ref, onMounted } from 'vue'
+import axios from "axios";
+import { useRouter, useRoute } from "vue-router";
+import { ref } from "vue";
 export default {
   setup() {
-    const router = useRouter()
-    const email = ref('')
-    const password = ref('')
+    const router = useRouter();
+    const email = ref("");
+    const password = ref("");
     const route = useRoute()
     const from = route.query.from // Получаем параметр from из URL
     const baseURL = 'http://localhost:7000'
-    onMounted(() => {
-      console.log('Компонент был смонтирован')
-      // Например, здесь можно получить роль пользователя из localStorage
-      console.log(route.query.from)
-    })
-
     // Перехватчик axios
     axios.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response && error.response.status === 401) {
-          router.push({ path: '/auth', query: 'login' })
+          router.push("/auth");
         }
-        return Promise.reject(error)
-      },
-    )
+        return Promise.reject(error);
+      }
+    );
 
     const login = () => {
       if (!email.value || !password.value) {
-        alert('Пожалуйста, заполните все поля.')
-        return
+        alert("Пожалуйста, заполните все поля.");
+        return;
       }
 
       axios
@@ -79,10 +62,10 @@ export default {
           const moderated = response.headers['x-moderated']
           const role = response.headers['x-role']
 
-          sessionStorage.setItem('moderated', moderated)
-          sessionStorage.setItem('token', token)
-          sessionStorage.setItem('role', role)
-          sessionStorage.setItem('active', active)
+          localStorage.setItem('moderated', moderated)
+          localStorage.setItem('token', token)
+          localStorage.setItem('role', role)
+          localStorage.setItem('active', active)
           console.log('Active:', active)
           console.log('Moderated:', moderated)
           console.log('Role:', role)
@@ -97,8 +80,7 @@ export default {
             alert('Ошибка при регистрации. Попробуйте позже.')
           }
         })
-    }
-
+    };
     const register = () => {
       if (!email.value || !password.value) {
         alert('Пожалуйста, заполните все поля.')
@@ -133,20 +115,32 @@ export default {
           }
         })
     }
+    const logout = () => {
+      localStorage.removeItem('token')
+      router.push("/");
+    };
 
     return {
       email,
       password,
       login,
+      logout,
       from,
-      register,
-    }
+      register
+    };
   },
-}
+};
 </script>
 
-<style lang="sass">
-.my-card
-  width: 100%
-  max-width: 500px
+<style scoped>
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.exit-container {
+  position: absolute;
+  top: 5%;
+  right: 5%;
+}
 </style>

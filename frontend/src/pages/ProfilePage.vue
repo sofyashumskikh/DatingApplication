@@ -1,52 +1,91 @@
 <template>
   <div class="profile-page">
     <div class="text-center">
-      <h2 style="color: whitesmoke;">Редактирование профиля</h2>
+      <h2 style="color: whitesmoke">Редактирование профиля</h2>
     </div>
     <div class="form-conteiner">
-      <q-card class="my-card" style="width: 450px;">
+      <q-card class="my-card" style="width: 450px">
         <q-card-section>
-          <q-carousel v-if="profileImages.length > 0" animated v-model="slide" arrows navigation infinite
-            style="width: 400px; height: 400px;">
-            <q-carousel-slide v-for="(image, index) in profileImages" :key="index" :name="index" :img-src="image" />
+          <q-carousel
+            v-if="profileImages.length > 0"
+            animated
+            v-model="slide"
+            arrows
+            navigation
+            infinite
+            style="width: 400px; height: 400px"
+          >
+            <q-carousel-slide
+              v-for="(image, index) in profileImages"
+              :key="index"
+              :name="index"
+              :img-src="image"
+            />
           </q-carousel>
-          <div v-else style="width: 400px; height: 400px; background-color: #f0f0f0;"></div>
-          <br>
+          <div v-else style="width: 400px; height: 400px; background-color: #f0f0f0"></div>
+          <br />
           <div class="buttons-container">
-            <q-btn outline rounded color="primary" label="изменить фото" @click="change" style="margin-right: 100px" />
+            <q-btn
+              outline
+              rounded
+              color="primary"
+              label="изменить фото"
+              @click="change"
+              style="margin-right: 100px"
+            />
             <q-btn outline rounded color="primary" label="добавить фото" @click="add" />
           </div>
-          <input type="file" ref="fileInput" style="display: none" @change="changeFile">
-          <br>
+          <input type="file" ref="fileInput" style="display: none" @change="changeFile" />
+          <br />
           <q-input outlined label="Имя" v-model="Name" />
-          <br>
+          <br />
           <q-input outlined label="Фамилия" v-model="Surname" />
-          <br>
+          <br />
           <q-input outlined label="Страна" v-model="Country" />
-          <br>
+          <br />
           <q-input outlined label="Город" v-model="Town" />
-          <br>
+          <br />
           <q-checkbox v-model="Sex" val="male" label="Мужской" />
           <q-checkbox v-model="Sex" val="female" label="Женский" />
-          <br>
+          <br />
           <q-input outlined label="Возраст" v-model="Age" />
-          <br>
+          <br />
           <q-input outlined label="Контакты" v-model="TgNick" />
-          <br>
+          <br />
           <q-input uutlined label="Обо мне" v-model="Description" />
-          <br>
-          <q-btn outline rounded color="primary" label="OK" @click="ok" style="margin-right: 200px;" />
+          <br />
+          <q-btn
+            outline
+            rounded
+            color="primary"
+            label="OK"
+            @click="ok"
+            style="margin-right: 200px"
+          />
           <q-btn outline rounded color="primary" label="Удалить аккаунт" @click="show" />
           <q-dialog v-model="showDialog">
-            <q-card style="width: 300px;">
+            <q-card style="width: 300px">
               <q-card-section>
                 <div class="text-h6">Вы уверены?</div>
                 <div>Вы действительно хотите удалить свой аккаунт?</div>
               </q-card-section>
               <q-card-actions>
-                <q-btn label="Отмена" outline rounded color="primary" v-close-popup style="margin-left: 50px;" />
-                <q-btn label="Удалить" outline rounded color="negative" @click="deleteProfile"
-                  style="margin-left: 25px;" />
+                <q-btn
+                  label="Отмена"
+                  outline
+                  rounded
+                  color="primary"
+                  v-close-popup
+                  style="margin-left: 50px"
+                />
+                <q-btn
+                  label="Удалить"
+                  outline
+                  rounded
+                  color="negative"
+                  @click="deleteProfile"
+                  style="margin-left: 25px"
+                />
               </q-card-actions>
             </q-card>
           </q-dialog>
@@ -57,98 +96,149 @@
 </template>
 
 <script>
-
-import { useRouter } from "vue-router"
+import { useRouter, onMounted } from 'vue-router'
 //import { useQuasar } from "quasar"
-import { ref } from "vue";
-import axios from "axios";
+import { ref } from 'vue'
+import axios from 'axios'
 
 export default {
   setup() {
-
     //const $q = useQuasar();
-    const router = useRouter();
-    const Name = ref("");
-    const Surname = ref("");
-    const Country = ref("");
-    const Town = ref("");
-    const Sex = ref([]);
-    const Age = ref("");
-    const TgNick = ref("");
-    const Description = ref("")
-    const fileInput = ref(null);
-    const profileImages = ref([]);
-    const slide = ref(0);
-
-    const showDialog = ref(false);
+    const router = useRouter()
+    const Name = ref('')
+    const Surname = ref('')
+    const Country = ref('')
+    const Town = ref('')
+    const Sex = ref([])
+    const Age = ref('')
+    const TgNick = ref('')
+    const Description = ref('')
+    const fileInput = ref(null)
+    const profileImages = ref([])
+    const slide = ref(0)
+    const baseURL = 'http://localhost:7000'
+    const showDialog = ref(false)
     const show = () => {
-      showDialog.value = true;
-    };
+      showDialog.value = true
+    }
 
     axios.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response && error.response.status === 401) {
-          router.push("/auth");
+          router.push('/auth')
         }
-        return Promise.reject(error);
-      }
-    );
+        return Promise.reject(error)
+      },
+    )
 
     const changeFile = (event) => {
-      const file = event.target.files[0];
+      const file = event.target.files[0]
       if (file) {
-        const reader = new FileReader();
+        const reader = new FileReader()
         reader.onload = (e) => {
-          profileImages.value.push(e.target.result); // Добавляем новое изображение в массив
-        };
-        reader.readAsDataURL(file);
+          profileImages.value.push(e.target.result) // Добавляем новое изображение в массив
+        }
+        reader.readAsDataURL(file)
       }
-    };
+    }
 
     const change = () => {
-      fileInput.value.click();
-    };
+      fileInput.value.click()
+    }
 
     const add = async () => {
-      fileInput.value.click();
-    };
+      fileInput.value.click()
+    }
 
-    const ok = () => {
+    const ok = async () => {
       const profileData = {
-        Name: Name.value,
-        Surname: Surname.value,
-        Country: Country.value,
-        Town: Town.value,
-        Sex: Sex.value,
-        Age: Age.value,
-        TgNick: TgNick.value,
-        Description: Description.value,
-        profileImages: profileImages.value,
-      };
-      console.log("Данные профиля для сохранения:", profileData);
-      // Здесь должна быть отправка данных на сервер
-    };
+        id: 0, // Укажите здесь реальный ID, если он существует
+        user_id: 0, // Укажите ID пользователя, если это требуется
+        name: Name.value,
+        surname: Surname.value,
+        country_name: Country.value,
+        city_name: Town.value,
+        gender: Sex.value === 'female', // Преобразуем в булевое значение
+        age: Age.value,
+        active: true, // Укажите реальное значение, если требуется
+        about_me: Description.value,
+        nickname_tg: TgNick.value,
+        complaints_count: 0, // Задайте актуальное значение
+      }
+
+      console.log('Данные профиля для сохранения:', profileData)
+
+      try {
+        const token = localStorage.getItem('token') // Получаем токен из sessionStorage
+        console.log(`Bearer ${token}`)
+        const response = await axios.post(
+          `${baseURL}/api/profile`,
+          profileData, // Передаём данные профиля
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Передаём токен с приставкой "Bearer"
+              'Content-Type': 'application/json', // Правильный Content-Type        },
+            },
+          },
+        )
+        
+        // Обработка успешного ответа
+        console.log('Успешный ответ:', response.data)
+        console.log('Заголовки ответа:', {
+          XActive: response.headers['x-active'],
+          XModerated: response.headers['x-moderated'],
+          XRole: response.headers['x-role'],
+        })
+        alert('Профиль успешно сохранён!')
+      } catch (error) {
+        // Обработка ошибок
+        if (error.response) {
+          console.error('Ошибка сервера:', error.response.data)
+          alert(
+            `Ошибка: ${error.response.status} - ${error.response.data.detail || 'Не удалось сохранить профиль'}`,
+          )
+        } else {
+          console.error('Ошибка сети или другая ошибка:', error.message)
+          alert('Ошибка: Не удалось подключиться к серверу.')
+        }
+      }
+    }
 
     const deleteProfile = async () => {
       try {
-        const response = await axios.delete("/api/profile");
+        const response = await axios.delete('/api/profile')
         if (response.status === 200) {
           // Удаление профиля прошло успешно
-          router.push("/auth");
+          router.push('/auth')
         } else {
-          console.error(
-            "Failed to delete profile, server returned:",
-            response.status
-          );
+          console.error('Failed to delete profile, server returned:', response.status)
           // Обработайте ошибку (например, покажите сообщение об ошибке)
         }
       } catch (error) {
-        console.error("Error during profile deletion:", error);
+        console.error('Error during profile deletion:', error)
         // Обработайте ошибку (например, покажите сообщение об ошибке)
       }
-      showDialog.value = false;
-    };
+      showDialog.value = false
+    }
+
+    onMounted(async () => {
+      try {
+        const token = localStorage.getItem('token') // Получаем токен из sessionStorage
+
+        await axios.get(
+          `${baseURL}/api/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Передаём токен с приставкой "Bearer"
+            },
+          });
+
+
+      } catch (error) {
+        console.error('Ошибка при загрузке данных:', error);
+      }
+    });
 
     return {
       Name,
@@ -169,9 +259,9 @@ export default {
       show,
       showDialog,
       deleteProfile,
-    };
+    }
   },
-};
+}
 </script>
 
 <style scoped>

@@ -42,7 +42,7 @@ export default {
   setup() {
 
     const router = useRouter();
-    const slide = ref(1);
+    const slide = ref();
     const profiles = ref([]);
 
     const currentProfile = computed(() => {

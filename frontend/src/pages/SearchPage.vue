@@ -8,20 +8,8 @@
   <div class="q-pa-md">
     <div class="q-col-gutter-md row items-start">
       <div class="col-6">
-        <q-carousel
-          animated
-          v-model="slide"
-          arrows
-          navigation
-          infinite
-          style="width: 450px; height: 450px"
-        >
-          <q-carousel-slide
-            v-for="profile in profiles"
-            :key="profile.id"
-            :name="profile.id"
-            :img-src="profile.image"
-          />
+        <q-carousel animated v-model="slide" arrows navigation infinite style="width: 450px; height: 450px">
+          <q-carousel-slide v-for="profile in profiles" :key="profile.id" :name="profile.id" :img-src="profile.image" />
         </q-carousel>
       </div>
       <div class="col-6">
@@ -33,25 +21,11 @@
       </div>
     </div>
     <div class="buttons-container">
-      <q-btn
-        outline
-        rounded
-        color="primary"
-        label="LIKE"
-        @click="like"
-        style="margin-right: 300px"
-      />
+      <q-btn outline rounded color="primary" label="LIKE" @click="like" style="margin-right: 300px" />
       <q-btn outline rounded color="primary" label="DISLIKE" @click="dislike" />
     </div>
     <br />
-    <q-btn
-      outline
-      rounded
-      color="primary"
-      label="ПОЖАЛОВАТЬСЯ"
-      @click="openComplaintDialog"
-      style="left: 42%"
-    />
+    <q-btn outline rounded color="primary" label="ПОЖАЛОВАТЬСЯ" @click="openComplaintDialog" style="left: 42%" />
   </div>
   <q-dialog v-model="showComplaintDialog">
     <q-card style="width: 300px">
@@ -60,22 +34,8 @@
         <q-input outlined v-model="complaintText" type="textarea" />
       </q-card-section>
       <q-card-actions>
-        <q-btn
-          label="Отмена"
-          outline
-          rounded
-          color="primary"
-          v-close-popup
-          style="margin-left: 50px"
-        />
-        <q-btn
-          label="Отправить"
-          outline
-          rounded
-          color="negative"
-          @click="sendComplaint"
-          style="margin-left: 25px"
-        />
+        <q-btn label="Отмена" outline rounded color="primary" v-close-popup style="margin-left: 50px" />
+        <q-btn label="Отправить" outline rounded color="negative" @click="sendComplaint" style="margin-left: 25px" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -89,7 +49,7 @@ import { ref, onMounted, computed } from 'vue'
 export default {
   setup() {
     const router = useRouter()
-    const slide = ref(1)
+    const slide = ref()
     const showComplaintDialog = ref(false)
     const complaintText = ref('')
     const userId = 1
@@ -102,7 +62,9 @@ export default {
 
     const getProfiles = async () => {
       try {
-        const response = await axios.get(`${baseURL}/api/profiles`)
+        const response = await axios.get(`${baseURL}/api/profiles`,
+          {headers: { Authorization: `Bearer ${token}`},}
+        )
         profiles.value = response.data
         if (profiles.value.length > 0) {
           slide.value = profiles.value[0].id
@@ -111,6 +73,7 @@ export default {
         console.error('Failed to fetch profiles', error)
       }
     }
+
 
     onMounted(getProfiles)
 

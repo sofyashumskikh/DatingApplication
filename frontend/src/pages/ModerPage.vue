@@ -58,7 +58,7 @@ export default {
   setup() {
 
     const router = useRouter();
-    const route = useRoute();
+    const slide = ref();
     const isDialogVisible = ref(false);
     const complaints = ref([]);
     const baseURL = 'http://localhost:7000';

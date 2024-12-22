@@ -3,3 +3,4 @@ pgdata
 photos
 .venv
 .vscode
+node_modules

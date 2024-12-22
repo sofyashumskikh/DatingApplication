@@ -96,9 +96,9 @@
 </template>
 
 <script>
-import { useRouter, onMounted } from 'vue-router'
+import { useRouter } from 'vue-router'
 //import { useQuasar } from "quasar"
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 export default {
@@ -132,14 +132,58 @@ export default {
       },
     )
 
+   const selectedFile = ref(null) // Хранит выбранный файл
+    const previewImage = ref(null) // Для предварительного просмотра изображения
+     /*// Обработка выбора файла
     const changeFile = (event) => {
       const file = event.target.files[0]
       if (file) {
+        selectedFile.value = file
+
+        // Создание превью изображения
         const reader = new FileReader()
         reader.onload = (e) => {
-          profileImages.value.push(e.target.result) // Добавляем новое изображение в массив
+          previewImage.value = e.target.result
         }
         reader.readAsDataURL(file)
+      }
+    }*/
+    // Функция для обработки изменения файла
+    const changeFile = async (event) => {
+      const file = event.target.files[0] // Получаем выбранный файл
+
+      if (file) {
+        selectedFile.value = file
+
+        // Создание превью изображения
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          previewImage.value = e.target.result // Превью изображения
+        }
+        reader.readAsDataURL(file)
+      }
+
+      if (!selectedFile.value) {
+        alert('Выберите файл для загрузки.')
+        return
+      }
+
+      const formData = new FormData()
+      formData.append('photo', selectedFile.value) // Добавляем файл в объект FormData
+
+      try {
+        const response = await axios.post(`${baseURL}/api/photo`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data', // Указание типа данных
+          },
+        })
+
+        console.log('Фото успешно загружено:', response.data)
+        profileImages.value.unshift(response.data.photoUrl || previewImage.value)
+        alert('Фото успешно загружено!')
+      } catch (error) {
+        console.error('Ошибка при загрузке фото:', error)
+        alert('Произошла ошибка при загрузке фото.')
       }
     }
 
@@ -149,6 +193,7 @@ export default {
 
     const add = async () => {
       fileInput.value.click()
+      console.log('add ', fileInput.value)
     }
 
     const ok = async () => {
@@ -178,11 +223,11 @@ export default {
           {
             headers: {
               Authorization: `Bearer ${token}`, // Передаём токен с приставкой "Bearer"
-              'Content-Type': 'application/json', // Правильный Content-Type        },
+              'Content-Type': 'application/json',
             },
           },
         )
-        
+
         // Обработка успешного ответа
         console.log('Успешный ответ:', response.data)
         console.log('Заголовки ответа:', {
@@ -203,14 +248,49 @@ export default {
           alert('Ошибка: Не удалось подключиться к серверу.')
         }
       }
+      if (fileInput.value) {
+        try {
+          const token = localStorage.getItem('token') // Получаем токен из sessionStorage
+          console.log(`Bearer ${token}`, fileInput, fileInput.value)
+          const response = await axios.post(
+            `${baseURL}/api/photo`,
+            fileInput.value, // Передаём данные профиля
+            {
+              headers: {
+                Authorization: `Bearer ${token}`, // Передаём токен с приставкой "Bearer"
+              },
+            },
+          )
+
+          // Обработка успешного ответа
+          console.log('Успешный ответ:', response.data)
+          console.log('Заголовки ответа:', {
+            XActive: response.headers['x-active'],
+            XModerated: response.headers['x-moderated'],
+            XRole: response.headers['x-role'],
+          })
+          alert('Профиль успешно сохранён!')
+        } catch (error) {
+          // Обработка ошибок
+          if (error.response) {
+            console.error('Ошибка сервера:', error.response.data)
+            alert(
+              `Ошибка: ${error.response.status} - ${error.response.data.detail || 'Не удалось сохранить профиль'}`,
+            )
+          } else {
+            console.error('Ошибка сети или другая ошибка:', error.message)
+            alert('Ошибка: Не удалось подключиться к серверу.')
+          }
+        }
+      }
     }
 
     const deleteProfile = async () => {
       try {
-        const response = await axios.delete('/api/profile')
+        const response = await axios.delete(`${baseURL}/api/user`)
         if (response.status === 200) {
           // Удаление профиля прошло успешно
-          router.push('/auth')
+          router.push('/')
         } else {
           console.error('Failed to delete profile, server returned:', response.status)
           // Обработайте ошибку (например, покажите сообщение об ошибке)
@@ -226,19 +306,30 @@ export default {
       try {
         const token = localStorage.getItem('token') // Получаем токен из sessionStorage
 
-        await axios.get(
-          `${baseURL}/api/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Передаём токен с приставкой "Bearer"
-            },
-          });
-
-
+        let responce = await axios.get(`${baseURL}/api/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Передаём токен с приставкой "Bearer"
+          },
+        })
+        const profile = responce.data
+        Name.value = profile.name
+        Surname.value = profile.surname
+        Country.value = profile.country_name
+        Town.value = profile.city_name
+        Sex.value = profile.gender
+        Age.value = profile.age
+        TgNick.value = profile.nickname_tg
+        Description.value = profile.about_me
+        responce = await axios.get(`${baseURL}/api/profile_photo`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Передаём токен с приставкой "Bearer"
+          },
+        })
+        profileImages.value = responce.data
       } catch (error) {
-        console.error('Ошибка при загрузке данных:', error);
+        console.error('Ошибка при загрузке данных:', error)
       }
-    });
+    })
 
     return {
       Name,

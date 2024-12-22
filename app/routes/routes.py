@@ -3,9 +3,11 @@ from typing import List
 from database import schemas, services, session
 from sqlalchemy.orm import Session
 from database import services
+from fastapi.security import HTTPBearer
 
 # Инициализация роутера
 router = APIRouter()
+security = HTTPBearer()
 
 BASE_PORT = 7000
 BASE_URL = f"http://localhost:{BASE_PORT}"
@@ -109,7 +111,10 @@ def login_user(user: schemas.User, response: Response, db: Session = Depends(ses
         }},
     summary="получить все профили для страницы поиска (для юзеров и модераторов)"
 )
-def get_profiles(token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def get_profiles(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+        # Извлечение токена из заголовка Authorization
+    token = authorization.credentials
+
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -150,7 +155,8 @@ def get_profiles(token: str, response: Response, db: Session = Depends(session.g
         }},
     summary = "добавить или обновить информацию о себе (для юзера и модератора)"
 )
-def update_profile(new_profile: schemas.Profile, token: str, response: Response,db: Session = Depends(session.get_db_session)):
+def update_profile(new_profile: schemas.Profile, response: Response, authorization: str = Depends(security),db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -188,7 +194,8 @@ def update_profile(new_profile: schemas.Profile, token: str, response: Response,
         }},
     summary="получить информацию о своем профиле для лк"
 )
-def get_profile(token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def get_profile(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -220,7 +227,8 @@ def get_profile(token: str, response: Response, db: Session = Depends(session.ge
         }},
     summary="получить свое фото на странице лк"
 )
-def get_photos(token: str, user_id: int, response: Response, db: Session = Depends(session.get_db_session)):
+def get_photos(user_id: int, response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -256,7 +264,8 @@ def get_photos(token: str, user_id: int, response: Response, db: Session = Depen
         }},
     summary="загрузить фото в лк"
 )
-def add_photo(token: str, response: Response, photo: UploadFile = File(...), db: Session = Depends(session.get_db_session)):
+def add_photo(response: Response, authorization: str = Depends(security), photo: UploadFile = File(...), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -295,7 +304,8 @@ def add_photo(token: str, response: Response, photo: UploadFile = File(...), db:
         }},
     summary="поставить лайк"
 )
-def create_like(like: schemas.Like, token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def create_like(like: schemas.Like, response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -330,7 +340,8 @@ def create_like(like: schemas.Like, token: str, response: Response, db: Session 
         }},
     summary="получить пользователей с которыми мэтч"
 )
-def get_matches(token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def get_matches(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -349,7 +360,8 @@ def get_matches(token: str, response: Response, db: Session = Depends(session.ge
     },
     summary="удалить пользователя"
 )
-def delete_user(token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def delete_user(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -377,7 +389,8 @@ def delete_user(token: str, response: Response, db: Session = Depends(session.ge
     },
     summary="удалить фото (для юзера и модератора)"
 )
-def delete_photo(token: str, photo_id: int, response: Response, db: Session = Depends(session.get_db_session)):
+def delete_photo(photo_id: int, response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -423,7 +436,8 @@ def delete_photo(token: str, photo_id: int, response: Response, db: Session = De
     },
     summary="если юзер посмотрел уведомление о том что профиль был изменен модератором"
 )
-def view_notification(token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def view_notification(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -458,7 +472,8 @@ def view_notification(token: str, response: Response, db: Session = Depends(sess
         }
     },
     summary="создать жалобу")
-def create_complaint(complaint: schemas.Complaint, token: str, response: Response , db: Session = Depends(session.get_db_session)):
+def create_complaint(complaint: schemas.Complaint,  response: Response ,authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -495,7 +510,8 @@ def create_complaint(complaint: schemas.Complaint, token: str, response: Respons
         }
     },
             summary="жалобы просмотрены")
-def delete_complaint(profile_id: int, token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def delete_complaint(profile_id: int, response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -537,7 +553,8 @@ def delete_complaint(profile_id: int, token: str, response: Response, db: Sessio
         }
     },
     summary="получить список жалоб на юзера")
-def get_complaint(profile_id: int, token: str, response: Response, db: Session = Depends(session.get_db_session)):
+def get_complaint(profile_id: int, response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")

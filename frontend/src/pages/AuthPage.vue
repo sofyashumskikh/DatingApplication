@@ -75,15 +75,6 @@ export default {
         .then((response) => {
           alert('Успешно вошли!')
           const token = response.data.token
-          /*const active = response.headers['X-Active'];
-          const moderated = response.headers['X-Moderated'];
-
-          const role = response.headers['X-Role'];
-          console.log(response);
-          console.log(response.headers);
-          console.log(response.headers['X-Role']);
-          console.log(response.headers['x-role']);
-          */ // Сохраняем роль в localStorage
           const active = response.headers['x-active']
           const moderated = response.headers['x-moderated']
           const role = response.headers['x-role']

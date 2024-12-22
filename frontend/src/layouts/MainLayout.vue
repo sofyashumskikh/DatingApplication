@@ -52,17 +52,17 @@ const linksList = [
   {
     title: 'Поиск',
     icon: 'search',
-    to: '/search', // Для внутреннего маршрута
+    to: '/app/search', // Для внутреннего маршрута
   },
   {
     title: 'Мэтчи',
     icon: 'favorite',
-    to: '/matches', // Для внутреннего маршрута
+    to: '/app/matches', // Для внутреннего маршрута
   },
   {
     title: 'Профиль',
     icon: 'settings',
-    to: '/settings', // Для внутреннего маршрута
+    to: '/app/profile', // Для внутреннего маршрута
   },
   {
     title: 'Выход',

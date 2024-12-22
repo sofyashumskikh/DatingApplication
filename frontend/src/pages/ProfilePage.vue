@@ -132,9 +132,9 @@ export default {
       },
     )
 
-   const selectedFile = ref(null) // Хранит выбранный файл
+    const selectedFile = ref(null) // Хранит выбранный файл
     const previewImage = ref(null) // Для предварительного просмотра изображения
-     /*// Обработка выбора файла
+    /*// Обработка выбора файла
     const changeFile = (event) => {
       const file = event.target.files[0]
       if (file) {

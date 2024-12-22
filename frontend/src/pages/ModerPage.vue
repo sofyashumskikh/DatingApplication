@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { ref } from "vue";
 
@@ -58,30 +58,16 @@ export default {
   setup() {
 
     const router = useRouter();
+    const route = useRoute();
     const isDialogVisible = ref(false);
-    const complaints = ref([
-      {
-        id: 1,
-        date_time: "10:00",
-        text: "Этот пользователь плохо себя ведет",
-      },
-      {
-        id: 2,
-        date_time: "11:00",
-        text: "Нарушает правила сообщества",
-      },
-      {
-        id: 3,
-        date_time: "12:00",
-        text: "Оскорбляет других пользователей",
-      },
-    ]);
+    const complaints = ref([]);
+    const baseURL = 'http://localhost:7000';
 
     axios.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response && error.response.status === 401) {
-          router.push("/auth");
+          router.push("app/auth");
         }
         return Promise.reject(error);
       }
@@ -91,13 +77,36 @@ export default {
       isDialogVisible.value = true;
     };
 
+    // загрузить профиль
+    // заблокировать пользователя
+
+    const getProfiles = async () => {
+      try {
+        const response = await axios.get(`${baseURL}/api/profiles`)
+        profiles.value = response.data
+        if (profiles.value.length > 0) {
+          slide.value = profiles.value[0].id
+        }
+      } catch (error) {
+        console.error('Failed to fetch profiles', error)
+      }
+    }
+
+    onMounted(getProfiles)
+
     const edit = () => {
-      router.push("/profile");
+      const user_id = localStorage.getItem('user_id');
+      if (user_id) {
+        router.push({ path: "app/profile", query: { user_id: user_id }, });
+      }
+      else {
+        console.error("Не удалось получить ID пользователя")
+      }
     };
 
     const logout = () => {
       localStorage.removeItem('token')
-      router.push("/");
+      router.push("app");
     };
 
     return {

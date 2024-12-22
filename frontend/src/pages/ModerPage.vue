@@ -50,9 +50,9 @@
 </template>
 
 <script>
-import { useRouter, useRoute } from "vue-router";
+import { useRouter} from "vue-router";
 import axios from "axios";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 
 export default {
   setup() {
@@ -79,7 +79,7 @@ export default {
 
     // загрузить профиль
     // заблокировать пользователя
-
+    const profiles = ref();
     const getProfiles = async () => {
       try {
         const response = await axios.get(`${baseURL}/api/profiles`)

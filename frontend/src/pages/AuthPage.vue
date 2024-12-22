@@ -102,8 +102,8 @@ export default {
           const token = response.data.token
           //const active = response.headers['x-active'];
           const role = response.headers['X-Role']
-          sessionStorage.setItem('token', token)
-          sessionStorage.setItem('role', role) // Сохраняем роль в localStorage
+          localStorage.setItem('token', token)
+          localStorage.setItem('role', role) // Сохраняем роль в localStorage
           if (role == 'user') {
             router.push('/app/profile')
           } else {

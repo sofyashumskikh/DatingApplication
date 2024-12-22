@@ -31,7 +31,7 @@
 <script>
 import { defineComponent } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
-import { useRouter } from "vue-router";
+//import { useRouter } from "vue-router";
 
 const linksList = [
   {
@@ -68,20 +68,10 @@ export default defineComponent({
 
   setup() {
         // Получаем роль из localStorage
-    const role = sessionStorage.getItem('role');
-    const router = useRouter();
+    //const router = useRouter();
 
-    // Функция выхода
-    const logout = () => {
-      // Очистить токен и роль из localStorage
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('role');
-
-      router.push('/');
-    };
-    return {  role,
-      linksList,
-      logout
+    return {
+      linksList
     }
   },
 })

@@ -130,7 +130,9 @@ def get_profiles(response: Response, authorization: str = Depends(security), db:
         profiles = services.get_all_profiles_by_moderator(db)
     else:
         profiles = services.get_all_profiles(token, db)
-    update_headers(token, db, response)
+        update_headers(token, db, response)
+        response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
+
     return profiles if profiles else []
 
     
@@ -172,6 +174,7 @@ def update_profile(new_profile: schemas.Profile, response: Response, authorizati
 
     update_headers(token, db, response)
     response.status_code = 200
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return response
 
 @router.get(
@@ -206,6 +209,7 @@ def get_profile(response: Response, authorization: str = Depends(security), db: 
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return profile
 
 @router.get(
@@ -240,6 +244,7 @@ def get_photos(user_id: int, response: Response, authorization: str = Depends(se
         raise HTTPException(status_code=404, detail="User not found")
     photos = services.get_photos(user.id, db)
     update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return photos
 
 @router.post(
@@ -282,6 +287,7 @@ def add_photo(response: Response, authorization: str = Depends(security), photo:
     if not photo_schema:
         raise HTTPException(status_code=500, detail="No profile found")
     update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return photo_schema
 
 @router.post(
@@ -318,6 +324,7 @@ def create_like(like: schemas.Like, response: Response, authorization: str = Dep
 
     update_headers(token, db, response)
     response.status_code = 200
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return response
 
 
@@ -348,6 +355,7 @@ def get_matches(response: Response, authorization: str = Depends(security), db: 
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
     update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return services.get_match(token, db)
 
 #-----------------------------------------
@@ -375,6 +383,7 @@ def delete_user(response: Response, authorization: str = Depends(security), db: 
     update_headers(token, db, response)
     if services.delete_user_fully(user.id, db):
         response.status_code = 200
+        response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
         return response
     else:
         raise HTTPException(status_code=500, detail="Couldn't delete user")
@@ -412,6 +421,7 @@ def delete_photo(photo_id: int, response: Response, authorization: str = Depends
 
     update_headers(token, db, response)
     response.status_code = 200
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return response
 
 
@@ -449,6 +459,7 @@ def view_notification(response: Response, authorization: str = Depends(security)
     
     update_headers(token, db, response)
     response.status_code = 200
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return response
 
 
@@ -485,6 +496,7 @@ def create_complaint(complaint: schemas.Complaint,  response: Response ,authoriz
 
     update_headers(token, db, response)
     response.status_code = 200
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return response
 
 
@@ -528,6 +540,7 @@ def delete_complaint(profile_id: int, response: Response, authorization: str = D
 
     update_headers(token, db, response)
     response.status_code = 200
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return response
 
 
@@ -568,6 +581,7 @@ def get_complaint(profile_id: int, response: Response, authorization: str = Depe
 
     complaints = services.get_list_of_complaint(profile_id, db)
     update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return complaints
 
 

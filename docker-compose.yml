@@ -24,8 +24,21 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:password@postgres:5432/dating_database
 
+  dating_frontend:
+    build:
+      context: ./frontend
+    image: dating_frontend
+    depends_on:
+      - dating_app
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+
 volumes:
-#  - ./app:/app
   pgdata:
 
 

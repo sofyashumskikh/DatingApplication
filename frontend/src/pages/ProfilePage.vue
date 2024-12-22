@@ -26,7 +26,8 @@
           <br>
           <q-input outlined label="Город" v-model="Town" />
           <br>
-          <q-input outlined label="Пол" v-model="Sex" />
+          <q-checkbox v-model="Sex" val="male" label="Мужской" />
+          <q-checkbox v-model="Sex" val="female" label="Женский" />
           <br>
           <q-input outlined label="Возраст" v-model="Age" />
           <br>
@@ -43,8 +44,9 @@
                 <div>Вы действительно хотите удалить свой аккаунт?</div>
               </q-card-section>
               <q-card-actions>
-                <q-btn label="Отмена" outline rounded color="primary" v-close-popup style="margin-left: 50px;"/>
-                <q-btn label="Удалить" outline rounded color="negative" @click="deleteProfile" style="margin-left: 25px;"/>
+                <q-btn label="Отмена" outline rounded color="primary" v-close-popup style="margin-left: 50px;" />
+                <q-btn label="Удалить" outline rounded color="negative" @click="deleteProfile"
+                  style="margin-left: 25px;" />
               </q-card-actions>
             </q-card>
           </q-dialog>
@@ -70,7 +72,7 @@ export default {
     const Surname = ref("");
     const Country = ref("");
     const Town = ref("");
-    const Sex = ref("");
+    const Sex = ref([]);
     const Age = ref("");
     const TgNick = ref("");
     const Description = ref("")

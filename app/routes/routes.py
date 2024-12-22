@@ -18,7 +18,7 @@ def update_headers(token: str, db: Session, response: Response):
     moderated = services.get_moderated_by_token(token, db)
     active = services.get_active_by_token(token, db)
 
-    response.headers["X-Active"] = str(active)
+    response.headers["x-Active"] = str(active)
     response.headers["X-Moderated"] = str(moderated)
     response.headers["X-Role"] = role
 
@@ -86,6 +86,8 @@ def login_user(user: schemas.User, response: Response, db: Session = Depends(ses
     if token is None:
         raise HTTPException(status_code=500, detail="Failed to create token")
     update_headers(token.token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
+
     return token
 
 

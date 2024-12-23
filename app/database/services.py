@@ -17,7 +17,7 @@ import os
 
 #Регистрация
 
-def hash_password(password: str) -> str: #!Надо проверить, что работает #Хэшируем пароль
+def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()  # Генерируем соль
     password_hash = bcrypt.hashpw(password.encode('utf-8'), salt)  # Хэшируем пароль
     return password_hash.decode('utf-8')  # Возвращаем строковое представление хэша
@@ -113,6 +113,7 @@ def create_or_update_profile(token: str, profile: schemas.Profile, db: Session) 
     db_profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id == user.id).first()
     country_id = get_or_create_country(profile.country_name, db)
     city_id = get_or_create_city(profile.city_name, db)
+    horoscope_id = get_or_create_horoscope(profile.horoscope, db)
 
     if not db_profile:
         new_profile = dbase.m.Profile(
@@ -120,6 +121,7 @@ def create_or_update_profile(token: str, profile: schemas.Profile, db: Session) 
             name=profile.name,
             surname=profile.surname,
             country_id=country_id,
+            horoscope_id=horoscope_id,
             city_id=city_id,
             gender=profile.gender,
             age=profile.age,
@@ -137,6 +139,7 @@ def create_or_update_profile(token: str, profile: schemas.Profile, db: Session) 
     db_profile.surname = profile.surname
     db_profile.country_id = country_id
     db_profile.city_id = city_id
+    db_profile.horoscope_id = horoscope_id
     db_profile.gender = profile.gender
     db_profile.age = profile.age
     db_profile.about_me = profile.about_me
@@ -158,6 +161,7 @@ def get_profile_by_token(token: str, db: Session) -> Optional[schemas.Profile]:
     profile_schema.active = user.active
     profile_schema.country_name = get_country(profile.country_id, db)
     profile_schema.city_name = get_city(profile.city_id, db)
+    profile_schema.horoscope = get_horoscope(profile.horoscope_id, db)
     return profile_schema
 
 #Города и страны
@@ -183,7 +187,27 @@ def get_or_create_city(city_name: str, db: Session) -> int:
     db.refresh(new_city)
     return new_city.id
 
-def get_country (country_id: int, db: Session) -> Optional[str]:
+def get_or_create_horoscope(horoscope: str, db: Session) -> int:
+    existing_horoscope = db.query(dbase.m.Horoscope).filter(dbase.m.Horoscope.horoscope == horoscope).first()
+    if existing_horoscope:
+        return existing_horoscope.id
+
+    new_horoscope = dbase.m.Horoscope(horoscope=horoscope)
+    db.add(new_horoscope)
+    db.commit()
+    db.refresh(new_horoscope)
+    return new_horoscope.id
+
+def get_horoscope(horoscope_id: int, db: Session) -> Optional[str]:
+    horoscope = db.query(dbase.m.Horoscope).filter(dbase.m.Horoscope.id == horoscope_id).first()
+    if not horoscope:
+        return None
+    return horoscope.horoscope
+
+def get_user_filter_history(pofile_id: int, db: Session) -> Optional[dbase.m.UserFilterHistory]:
+    return db.query(dbase.m.UserFilterHistory).filter(dbase.m.UserFilterHistory.profile_id == pofile_id).first()
+
+def get_country(country_id: int, db: Session) -> Optional[str]:
     country = db.query(dbase.m.Country).filter(dbase.m.Country.id == country_id).first()
     if not country:
         return None
@@ -249,11 +273,57 @@ def get_profile_by_user_id(user_id: int, db: Session) -> schemas.Profile:
 
 #------------------------------------------
 
+def update_user_filter_history(token: str, user_filter: schemas.UserFilterHistory, db: Session) -> bool:
+    my_profile = get_profile_by_token(token, db)
+    if not my_profile:
+        return False
+
+    filter_empty = True
+
+    user_filter_old = get_user_filter_history(my_profile.id, db)
+    if not user_filter_old:
+        user_filter_old = dbase.m.UserFilterHistory(profile_id=my_profile.id)
+    user_filter_old.added_at = datetime.datetime.now()
+
+    if user_filter.age:
+        user_filter_old.age = user_filter.age
+        filter_empty = False
+    if user_filter.gender:
+        user_filter_old.gender = user_filter.gender
+        filter_empty = False
+    if user_filter.horoscope:
+        horoscope_ids = []
+        for horoscope in user_filter.horoscope:
+            horoscope_ids.append(get_or_create_horoscope(horoscope, db))
+        user_filter_old.horoscope_id = horoscope_ids
+        filter_empty = False
+    if user_filter.city_name:
+        city_ids = []
+        for city in user_filter.city_name:
+            city_ids.append(get_or_create_city(city, db))
+        user_filter_old.city_id = city_ids
+        filter_empty = False
+    if user_filter.country_name:
+        country_ids = []
+        for country in user_filter.city_name:
+            country_ids.append(get_or_create_country(country, db))
+        user_filter_old.country_id = country_ids
+        filter_empty = False
+
+    if not filter_empty:
+        db.add(user_filter_old)
+        db.commit()
+    return True
+
 # Претенденты на симпатию
-def get_all_profiles(token: str, db: Session) -> Optional[List[schemas.Profile]]: # фильтрация по активности
+def get_all_profiles(token: str, user_filter: schemas.UserFilterHistory, db: Session) -> Optional[List[schemas.Profile]]: # фильтрация по активности
     my_user = get_user_by_token(token, db)
     if not my_user:
         return None
+
+    if not update_user_filter_history(token, user_filter, db):
+        return None
+
     users = db.query(dbase.m.User).filter(dbase.m.User.active == True, dbase.m.User.id != my_user.id).all()
     user_ids = [user.id for user in users]
     profiles = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id.in_(user_ids)).all()
@@ -264,8 +334,10 @@ def get_all_profiles(token: str, db: Session) -> Optional[List[schemas.Profile]]
         profile_schema.active = True
         profile_schema.country_name = get_country(profile.country_id, db)
         profile_schema.city_name = get_city(profile.city_id, db)
+        profile_schema.horoscope = get_horoscope(profile.horoscope_id, db)
         profile_schema.nickname_tg = None
-        profiles_schemas.append(profile_schema)
+        if match_filter(user_filter, profile_schema):
+            profiles_schemas.append(profile_schema)
     return profiles_schemas
 
 # лайк
@@ -310,6 +382,7 @@ def get_match(token: str, db: Session) -> List[schemas.Profile]:
         profile_schema.active = True
         profile_schema.country_name = get_country(profile.country_id, db)
         profile_schema.city_name = get_city(profile.city_id, db)
+        profile_schema.horoscope = get_horoscope(profile.horoscope_id, db)
 
         if get_user_by_id(profile.user_id, db).active:
             profile_schemas.append(profile_schema)
@@ -360,6 +433,13 @@ def delete_user_profile(profile_id: int, db: Session) -> bool:
     db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile_id).delete()
     return True
 
+def delete_history(profile_id: int, db: Session) -> bool:
+    history_record = db.query(dbase.m.UserFilterHistory).filter(dbase.m.UserFilterHistory.profile_id == profile_id).first()
+    if not history_record:
+        return False
+    db.query(dbase.m.UserFilterHistory).filter(dbase.m.UserFilterHistory.id == history_record.id).delete()
+    return True
+
 def delete_user_photos(profile_id: int, db: Session) -> bool:
     profile_record = db.query(dbase.m.Profile).filter(dbase.m.Profile.id == profile_id).first()
     if not profile_record:
@@ -389,6 +469,8 @@ def delete_user(user_id: int, db: Session) -> bool:
     db.query(dbase.m.User).filter(dbase.m.User.id == user_id).delete()
     return True
 
+
+
 def delete_user_fully(user_id: int, db: Session) -> bool:
     try:
         user = db.query(dbase.m.User).filter(dbase.m.User.id == user_id).first()
@@ -402,6 +484,7 @@ def delete_user_fully(user_id: int, db: Session) -> bool:
         if profile:
             delete_user_photos(profile.id, db)
             delete_complaints_for_profile(profile.id, db)
+            delete_history(profile.id, db)
             delete_user_profile(profile.id, db)
 
         delete_user(user_id, db)
@@ -414,11 +497,30 @@ def delete_user_fully(user_id: int, db: Session) -> bool:
 
 #__________________________________________________________
 
+def match_filter(user_filter: schemas.UserFilterHistory, profile: schemas.Profile) -> bool:
+    if user_filter.age:
+        if not profile.age or profile.age < user_filter.age[0] or profile.age > user_filter.age[1]:
+            return False
+    if user_filter.gender:
+        if not profile.gender or profile.gender not in user_filter.gender:
+            return False
+    if user_filter.horoscope:
+        if not profile.horoscope or profile.horoscope not in user_filter.horoscope:
+            return False
+    if user_filter.city_name:
+        if not profile.city_name or profile.city_name not in user_filter.city_name:
+            return False
+    if user_filter.country_name:
+        if not profile.country_name or profile.country_name not in user_filter.country_name:
+            return False
+    return True
+
 def get_complaint_count(profile_id: int, db: Session) -> int: #получение количества жалоб на пользователя
     complaint_count = db.query(func.count(dbase.m.Complaint.id)).filter(dbase.m.Complaint.profile_id_to == profile_id).scalar()
     return complaint_count
 
-def get_all_profiles_by_moderator(db: Session) -> List[schemas.Profile]:
+def get_all_profiles_by_moderator(user_filter: schemas.UserFilterHistory,
+                                  db: Session) -> List[schemas.Profile]:
     profiles = db.query(dbase.m.Profile).all()
     for profile in profiles:
         profile.complaints_count = get_complaint_count(profile.id, db)
@@ -434,7 +536,9 @@ def get_all_profiles_by_moderator(db: Session) -> List[schemas.Profile]:
         profile_schema.active = get_user_by_id(profile.user_id, db).active
         profile_schema.country_name = get_country(profile.country_id, db)
         profile_schema.city_name = get_city(profile.city_id, db)
-        profiles.append(profile_schema)
+        profile_schema.horoscope = get_horoscope(profile.horoscope_id, db)
+        if match_filter(user_filter, profile_schema):
+            profiles.append(profile_schema)
     return profiles
 
 def get_list_of_complaint(profile_id: int, db: Session) -> List[schemas.Complaint]:
@@ -464,6 +568,7 @@ def update_profile_by_moderator(profile: schemas.Profile, db: Session) -> bool: 
     if not db_profile:
         return False
 
+    horoscope_id = get_or_create_horoscope(profile.horoscope, db)
     country_id = get_or_create_country(profile.country_name, db)
     city_id = get_or_create_city(profile.city_name, db)
 
@@ -471,6 +576,7 @@ def update_profile_by_moderator(profile: schemas.Profile, db: Session) -> bool: 
     db_profile.surname = profile.surname
     db_profile.country_id = country_id
     db_profile.city_id = city_id
+    db_profile.horoscope_id = horoscope_id
     db_profile.gender = profile.gender
     db_profile.age = profile.age
     db_profile.about_me = profile.about_me
@@ -504,3 +610,14 @@ def delete_photo_by_moderator(photo_id: int, db: Session) -> bool:
     db.commit()  # Применяем изменения в базе
     return True
 
+def get_all_countries(db) -> List[str]:
+    countries = db.query(dbase.m.Country).all()
+    return [country.country_name for country in countries]
+
+def get_all_cities(db) -> List[str]:
+    cities = db.query(dbase.m.City).all()
+    return [city.city_name for city in cities]
+
+def get_all_horoscopes(db) -> List[str]:
+    horoscopes = db.query(dbase.m.Horoscope).all()
+    return [horoscope.horoscope for horoscope in horoscopes]

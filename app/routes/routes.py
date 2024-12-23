@@ -92,7 +92,7 @@ def login_user(user: schemas.User, response: Response, db: Session = Depends(ses
 
 
 #--------------
-@router.get(
+@router.post(
     "/api/profiles",
     response_model=List[schemas.Profile],
     responses={
@@ -113,8 +113,10 @@ def login_user(user: schemas.User, response: Response, db: Session = Depends(ses
         }},
     summary="получить все профили для страницы поиска (для юзеров и модераторов)"
 )
-def get_profiles(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
-        # Извлечение токена из заголовка Authorization
+def get_profiles(user_filter: schemas.UserFilterHistory,
+                 response: Response,
+                 authorization: str = Depends(security),
+                 db: Session = Depends(session.get_db_session)):
     token = authorization.credentials
 
     authorized = services.is_token_valid(token, db)
@@ -124,14 +126,13 @@ def get_profiles(response: Response, authorization: str = Depends(security), db:
     active = services.get_active_by_token(token, db)
     if not active:
         return []
-    
     role = services.get_role(token, db)
     if role == "moderator":
-        profiles = services.get_all_profiles_by_moderator(db)
+        profiles = services.get_all_profiles_by_moderator(user_filter, db)
     else:
-        profiles = services.get_all_profiles(token, db)
-        update_headers(token, db, response)
-        response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
+        profiles = services.get_all_profiles(token, user_filter, db)
+    update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
 
     return profiles if profiles else []
 
@@ -164,12 +165,12 @@ def update_profile(new_profile: schemas.Profile, response: Response, authorizati
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
+
     role = services.get_role(token, db)
     if role == "moderator":
         if not services.update_profile_by_moderator(new_profile, db):
             raise HTTPException(status_code=404, detail="Profile not found")
-    else:    
+    else:
         services.create_or_update_profile(token, new_profile, db)
 
     update_headers(token, db, response)
@@ -204,7 +205,7 @@ def get_profile(response: Response, authorization: str = Depends(security), db: 
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
+
     profile = services.get_profile_by_token(token, db)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
@@ -253,8 +254,8 @@ def get_photos(user_id: int, response: Response, authorization: str = Depends(se
     responses={
         400: {"detail": "Only JPEG and PNG files supported"},
         401: {"detail": "Invalid token"},
-        500: {"detail": "No profile found"},
-        501: {"detail": "Couldn't save photo"},
+        404: {"detail": "No profile found"},
+        500: {"detail": "Couldn't save photo"},
         200: {
             "description": "Успешный ответ",
             "headers": {
@@ -281,11 +282,11 @@ def add_photo(response: Response, authorization: str = Depends(security), photo:
 
     url = services.save_file(photo)
     if not url:
-        raise HTTPException(status_code=501, detail="Couldn't save photo")
+        raise HTTPException(status_code=500, detail="Couldn't save photo")
 
     photo_schema = services.create_photo(token, url, db)
     if not photo_schema:
-        raise HTTPException(status_code=500, detail="No profile found")
+        raise HTTPException(status_code=404, detail="No profile found")
     update_headers(token, db, response)
     response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return photo_schema
@@ -430,6 +431,7 @@ def delete_photo(photo_id: int, response: Response, authorization: str = Depends
     response_class=Response,
     responses={
         401: {"detail": "Invalid token"},
+        404: {"detail": "No profile or user found"},
         200: {
             "description": "Успешный ответ",
             "headers": {
@@ -443,8 +445,7 @@ def delete_photo(photo_id: int, response: Response, authorization: str = Depends
                     "type": "string"
                 }
             },
-        },
-        500:{"detail": "No profile or user id"}
+        }
     },
     summary="если юзер посмотрел уведомление о том что профиль был изменен модератором"
 )
@@ -455,7 +456,7 @@ def view_notification(response: Response, authorization: str = Depends(security)
         raise HTTPException(status_code=401, detail="Invalid token")
     
     if not services.notification_viewed(token, db):
-        raise HTTPException(status_code=500, detail="No profile or user found")
+        raise HTTPException(status_code=404, detail="No profile or user found")
     
     update_headers(token, db, response)
     response.status_code = 200
@@ -468,7 +469,7 @@ def view_notification(response: Response, authorization: str = Depends(security)
     response_class=Response,
     responses={
         401: {"detail": "Invalid token"},
-        500: {"detail": "No profile"},
+        404: {"detail": "No profile found"},
         200: {
             "description": "Успешный ответ",
             "headers": {
@@ -492,7 +493,7 @@ def create_complaint(complaint: schemas.Complaint,  response: Response ,authoriz
         raise HTTPException(status_code=401, detail="Invalid token")
     
     if not services.create_complaint(complaint, db):
-        raise HTTPException(status_code=500, detail="No profile")
+        raise HTTPException(status_code=404, detail="No profile found")
 
     update_headers(token, db, response)
     response.status_code = 200
@@ -585,8 +586,95 @@ def get_complaint(profile_id: int, response: Response, authorization: str = Depe
     return complaints
 
 
+@router.get(
+    "/api/horoscopes",
+    response_model=List[str],
+    responses={
+        401: {"detail": "Invalid token"},
+        200: {
+            "description": "Успешный ответ",
+            "headers": {
+                "X-Active": {
+                    "type": "boolean",
+                },
+                "X-Moderated": {
+                    "type": "boolean",
+                },
+                "X-Role":{
+                    "type": "string"
+                }
+            },
+        }},
+    summary="получить все гороскопы пользователей, добавленные в систему"
+)
+def get_horoscopes(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
+    authorized = services.is_token_valid(token, db)
+    if not authorized:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
+    update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
+    return services.get_all_horoscopes(db)
 
+@router.get(
+    "/api/cities",
+    response_model=List[str],
+    responses={
+        401: {"detail": "Invalid token"},
+        200: {
+            "description": "Успешный ответ",
+            "headers": {
+                "X-Active": {
+                    "type": "boolean",
+                },
+                "X-Moderated": {
+                    "type": "boolean",
+                },
+                "X-Role":{
+                    "type": "string"
+                }
+            },
+        }},
+    summary="получить все города пользователей, добавленные в систему"
+)
+def get_cities(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
+    authorized = services.is_token_valid(token, db)
+    if not authorized:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
+    update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
+    return services.get_all_cities(db)
 
+@router.get(
+    "/api/countries",
+    response_model=List[str],
+    responses={
+        401: {"detail": "Invalid token"},
+        200: {
+            "description": "Успешный ответ",
+            "headers": {
+                "X-Active": {
+                    "type": "boolean",
+                },
+                "X-Moderated": {
+                    "type": "boolean",
+                },
+                "X-Role":{
+                    "type": "string"
+                }
+            },
+        }},
+    summary="получить все города пользователей, добавленные в систему"
+)
+def get_countries(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
+    authorized = services.is_token_valid(token, db)
+    if not authorized:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
+    update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
+    return services.get_all_countries(db)

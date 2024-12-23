@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, ARRAY
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -22,11 +21,6 @@ class User(Base):
     moderated = Column(Boolean, default=False)
     active = Column(Boolean, default=True)
 
-    tokens = relationship('Token', backref='users')
-    profile = relationship('Profile', backref='users', uselist=False)
-    likes_from = relationship('Like', foreign_keys='Like.user_id_from', back_populates='user_from')
-    likes_to = relationship('Like', foreign_keys='Like.user_id_to', back_populates='user_to')
-
 class Profile(Base):
     __tablename__ = 'profiles'
 
@@ -35,16 +29,12 @@ class Profile(Base):
     name = Column(String(50))
     surname = Column(String(50))
     country_id = Column(Integer, ForeignKey('countries.id'))
+    horoscope_id = Column(Integer, ForeignKey('horoscopes.id'))
     city_id = Column(Integer, ForeignKey('cities.id'))
     gender = Column(Boolean)
     age = Column(Integer)
     nickname_tg = Column(String(64))
     about_me = Column(String(300))
-
-    photos = relationship('Photo', backref='profile')
-    country = relationship('Country')
-    city = relationship('City')
-    complaints = relationship('Complaint', back_populates='profile')
 
 class City(Base):
     __tablename__ = 'cities'
@@ -65,9 +55,6 @@ class Like(Base):
     user_id_from = Column(Integer, ForeignKey('users.id'))
     user_id_to = Column(Integer, ForeignKey('users.id'))
 
-    user_from = relationship('User', foreign_keys=[user_id_from], back_populates='likes_from')
-    user_to = relationship('User', foreign_keys=[user_id_to], back_populates='likes_to')
-
 class Photo(Base):
     __tablename__ = 'photos'
 
@@ -83,6 +70,22 @@ class Complaint(Base):
     letter = Column(String(300), nullable=False)
     added_at = Column(DateTime, nullable=False)
 
-    profile = relationship('Profile', back_populates='complaints')
+class Horoscope(Base):
+    __tablename__ = 'horoscopes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    horoscope = Column(String(30), nullable=False)
+
+class UserFilterHistory(Base):
+    __tablename__ = 'user_filter_history'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    profile_id = Column(Integer, nullable=False)
+    age = Column(ARRAY(Integer), nullable=True)
+    gender = Column(ARRAY(Boolean), nullable=True)
+    horoscope_id = Column(ARRAY(Integer), nullable=True)
+    city_id = Column(ARRAY(Integer), nullable=True)
+    country_id = Column(ARRAY(Integer), nullable=True)
+    added_at = Column(DateTime, nullable=False)
 
 

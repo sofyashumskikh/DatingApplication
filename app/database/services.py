@@ -242,6 +242,11 @@ def get_photos(profile_id: int, db: Session) -> List[schemas.Photo]:
     photos = db.query(dbase.m.Photo).filter(dbase.m.Photo.profile_id == profile_id).all()
     return [schemas.Photo.from_orm(photo) for photo in photos]
 
+def get_profile_by_user_id(user_id: int, db: Session) -> schemas.Profile:
+    profile = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id == user_id).first()
+    profile_schema = schemas.Profile.from_orm(profile)
+    return profile_schema
+
 #------------------------------------------
 
 # Претенденты на симпатию
@@ -267,6 +272,9 @@ def get_all_profiles(token: str, db: Session) -> Optional[List[schemas.Profile]]
 def create_likes(token: str, like: schemas.Like, db: Session) -> bool:
     user = get_user_by_token(token, db)
     if not user:
+        return False
+
+    if user.id == like.user_id_to:
         return False
 
     existing_like = db.query(dbase.m.Like).filter(

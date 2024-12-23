@@ -231,18 +231,18 @@ def get_profile(response: Response, authorization: str = Depends(security), db: 
                 }
             },
         }},
-    summary="получить свое фото на странице лк"
+    summary="получить фото пользователя на странице лк"
 )
 def get_photos(user_id: int, response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
     token = authorization.credentials
     authorized = services.is_token_valid(token, db)
     if not authorized:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
-    user = services.get_user_by_id(user_id, db)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    photos = services.get_photos(user.id, db)
+
+    profile = services.get_profile_by_user_id(user_id, db)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    photos = services.get_photos(profile.id, db)
     update_headers(token, db, response)
     response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return photos

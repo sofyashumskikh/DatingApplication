@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DatingApp>
+    <Description>
+        DatingAPP — это приложение для знакомств, которое предоставляет удобный способ поиска интересных людей для общения или романтических отношений. Пользователи создают персонализированные профили с описанием и фотографиями, указывают информацию о себе, а также могут оценивать профили других участников.
+        Основной акцент делается на взаимное согласие: контактная информация становится доступной только после того, как обе стороны выразили симпатию, что делает будущее общение комфортным и взаимно желанным.
+    </Description>
+
+    <Domain>
+        <FocusAreas>
+            <FocusArea>Онлайн-знакомства</FocusArea>
+            <FocusArea>Социальные взаимодействия и коммуникация</FocusArea>
+        </FocusAreas>
+    </Domain>
+
+    <Data>
+        <Tables>
+            <Table name="tokens">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="token" type="string" length="36" description="не может быть NULL" />
+                <Field name="user_id" type="foreign" reference="users.id" description="не может быть NULL" />
+                <Field name="update_at" type="timestamp" description="не может быть NULL" />
+            </Table>
+
+            <Table name="users">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="email" type="string" length="50" unique="true" description="не может быть NULL" />
+                <Field name="password_hash" type="string" length="256" description="не может быть NULL" />
+                <Field name="role" type="string" length="10" default="user" description="" />
+                <Field name="moderated" type="boolean" default="false" description="" />
+                <Field name="active" type="boolean" default="true" description="" />
+            </Table>
+
+            <Table name="profiles">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="user_id" type="foreign" reference="users.id" description="не может быть NULL" />
+                <Field name="name" type="string" length="50" nullable="true" description="" />
+                <Field name="surname" type="string" length="50" nullable="true" description="" />
+                <Field name="country_id" type="foreign" reference="countries.id" nullable="true" description="" />
+                <Field name="city_id" type="foreign" reference="cities.id" nullable="true" description="" />
+                <Field name="gender" type="boolean" nullable="true" description="True- женщина, False- мужчина" />
+                <Field name="age" type="integer" nullable="true" description="" />
+                <Field name="nickname_tg" type="string" length="64" nullable="true" description="" />
+                <Field name="about_me" type="string" length="300" nullable="true" description="" />
+            </Table>
+
+            <Table name="cities">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="city_name" type="string" length="50" unique="true" description="не может быть NULL" />
+            </Table>
+
+            <Table name="countries">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="country_name" type="string" length="50" unique="true" description="не может быть NULL" />
+            </Table>
+
+            <Table name="likes">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="user_id_from" type="foreign" reference="users.id" description="не может быть NULL" />
+                <Field name="user_id_to" type="foreign" reference="users.id" description="не может быть NULL" />
+                <Constraint description="значения user_id_from и user_id_to не могут совпадать" />
+            </Table>
+
+            <Table name="photos">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="profile_id" type="foreign" reference="profiles.id" description="не может быть NULL" />
+                <Field name="photo_url" type="string" length="150" nullable="true" description="" />
+            </Table>
+
+            <Table name="complaints">
+                <Field name="id" type="primary" description="уникальное значение, автоинкремент" />
+                <Field name="profile_id_to" type="foreign" reference="profiles.id" description="не может быть NULL" />
+                <Field name="letter" type="string" length="300" description="не может быть NULL" />
+                <Field name="added_at" type="timestamp" description="автоматически заполняется текущей датой и временем" />
+            </Table>
+        </Tables>
+
+        <Constraints>
+            <Constraint type="referential">Все внешние ключи должны ссылаться на существующие записи</Constraint>
+            <Constraint type="unique">Поле email должно быть уникальным</Constraint>
+            <Constraint type="logical">Пользователь не может лайкнуть сам себя</Constraint>
+            <Constraint type="validation">Пользователь может загрузить только фотографии формата PNG или JPEG</Constraint>
+        </Constraints>
+    </Data>
+
+    <Roles>
+        <Role name="Moderator">
+            <Responsibilities>
+                <Responsibility>Просмотр жалоб от пользователей</Responsibility>
+                <Responsibility>Внесение изменений в профиль при нарушениях</Responsibility>
+                <Responsibility>Деактивация пользователя при грубом нарушении</Responsibility>
+            </Responsibilities>
+            <UserCount>Зависит от потребностей проекта</UserCount>
+        </Role>
+        <Role name="User">
+            <Responsibilities>
+                <Responsibility>Размещение контента</Responsibility>
+                <Responsibility>Просмотр профилей других пользователей</Responsibility>
+                <Responsibility>Сообщение о неподобающем контенте</Responsibility>
+            </Responsibilities>
+            <UserCount>Зависит от масштаба платформы</UserCount>
+        </Role>
+    </Roles>
+
+    <API>
+        <Method name="POST /api/register">
+            <Description>Регистрация пользователя</Description>
+        </Method>
+        <Method name="POST /api/login">
+            <Description>Авторизация пользователя</Description>
+        </Method>
+        <Method name="GET /api/profiles">
+            <Description>Получить все профили для страницы поиска (user/moderator)</Description>
+        </Method>
+        <Method name="GET /api/profile">
+            <Description>Получить информацию о своем профиле</Description>
+        </Method>
+        <Method name="POST /api/profile">
+            <Description>Добавить или обновить информацию о профиле (user/moderator)</Description>
+        </Method>
+        <Method name="GET /api/profile_photo">
+            <Description>Получить фотографии профиля</Description>
+        </Method>
+        <Method name="POST /api/photo">
+            <Description>Загрузить фото в личный кабинет</Description>
+        </Method>
+        <Method name="DELETE /api/photo">
+            <Description>Удалить фото (user/moderator)</Description>
+        </Method>
+        <Method name="POST /api/like">
+            <Description>Поставить лайк</Description>
+        </Method>
+        <Method name="GET /api/match">
+            <Description>Получить пользователей, с которыми возник мэтч</Description>
+        </Method>
+        <Method name="DELETE /api/user">
+            <Description>Удалить пользователя</Description>
+        </Method>
+        <Method name="POST /api/notification">
+            <Description>Уведомления об изменениях профиля просмотрены</Description>
+        </Method>
+        <Method name="POST /api/complaint">
+            <Description>Создать жалобу</Description>
+        </Method>
+        <Method name="DELETE /api/complaint">
+            <Description>Жалобы просмотрены (moderator)</Description>
+        </Method>
+        <Method name="GET /api/complaint">
+            <Description>Получить список жалоб на юзера</Description>
+        </Method>
+        <DocumentationURL>http://localhost:7000/docs</DocumentationURL>
+    </API>
+
+    <UI>
+        <Page name="RegistrationAndLogin">
+            <Description>Страница регистрации и авторизации</Description>
+            <Details>
+                <Feature>Пользователи могут создать новый аккаунт, указав email и пароль. При успешной регистрации авторизация происходит автоматически.</Feature>
+                <Feature>Позволяет пользователю войти в систему, введя email и пароль. При успешной авторизации происходит переход на страницу поиска.</Feature>
+                <Feature>Если с момента последней авторизации прошло более 24 часов, требуется повторный вход.</Feature>
+            </Details>
+        </Page>
+
+        <Page name="ProfileEditing">
+            <Description>Страница редактирования профиля</Description>
+            <Details>
+                <Feature>Пользователь может внести данные: имя, фамилия, возраст, пол, страна, город, контактная информация и информация о себе.</Feature>
+                <Feature>На странице профиля пользователи могут загружать, удалять и просматривать фотографии.</Feature>
+            </Details>
+        </Page>
+
+        <Page name="ProfileSearch">
+            <Description>Страница поиска профилей</Description>
+            <Details>
+                <Feature>Отображается список пользователей с фотографиями и основной информацией без контактов.</Feature>
+                <Feature>Под профилем есть кнопки "Лайк", "Дизлайк" и возможность отправить жалобу.</Feature>
+                <Feature>В разделе "Совпадения" появляются пользователи с контактами после взаимных лайков.</Feature>
+            </Details>
+        </Page>
+
+        <Page name="ModeratorView">
+            <Description>Интерфейс модератора</Description>
+            <Details>
+                <Feature>Модератор просматривает список профилей, сортированный по количеству жалоб.</Feature>
+                <Feature>Может удалять поля или фотографии, а также деактивировать профили при нарушениях.</Feature>
+                <Feature>Просматривает список жалоб с содержанием и датой создания.</Feature>
+            </Details>
+        </Page>
+    </UI>
+
+    <Technologies>
+        <Backend>Python</Backend>
+        <Frontend>HTML, CSS, JavaScript</Frontend>
+        <Framework>Vue.js</Framework>
+        <Tools>Git, Docker, Nginx</Tools>
+        <APIType>RESTful API</APIType>
+        <Database>PostgreSQL</Database>
+        <ORM>SQLAlchemy</ORM>
+    </Technologies>
+
+    <Testing>
+        <Method>Ручное тестирование</Method>
+    </Testing>
+
+    <Transactions>
+        <Function name="delete_user_fully">
+            <Description>Полное удаление пользователя из базы данных, включая все связанные с ним данные, в рамках одной транзакции.</Description>
+            <Steps>
+                <Step>Поиск пользователя в таблице User по user_id.</Step>
+                <Step>Удаление связанных данных: токенов, лайков, профиля, фотографий и жалоб.</Step>
+                <Step>Удаление самого пользователя из базы данных.</Step>
+                <Step>Обработка ошибок: откат транзакции при SQLAlchemyError.</Step>
+            </Steps>
+        </Function>
+
+        <Function name="delete_complaints_for_profile">
+            <Description>Удаляет все жалобы, связанные с определённым профилем, из базы данных.</Description>
+            <Steps>
+                <Step>Удаление записей из таблицы Complaint по profile_id_to.</Step>
+                <Step>Фиксация изменений в базе данных с помощью db.commit().</Step>
+                <Step>Обработка ошибок: откат транзакции при SQLAlchemyError.</Step>
+            </Steps>
+        </Function>
+    </Transactions>
+</DatingApp>

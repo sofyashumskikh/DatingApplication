@@ -17,7 +17,7 @@ docker compose up --build
 ```
 В результате, API бекенда станет доступно по адресу:
 ```
-http://localhost:7000
+http://localhost:7000/docs
 ```
 Интерфейс станет доступен по адресу:
 ```

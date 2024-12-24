@@ -60,7 +60,7 @@ def register_user(user: schemas.User, response: Response, db: Session = Depends(
     "/api/login",
     response_model=schemas.Token,
     responses={
-        400: {"detail": "Invalid email pr password"},
+        400: {"detail": "Invalid email or password"},
         500: {"detail": "Failed to create token"},
         200: {
             "description": "Успешный ответ",
@@ -667,7 +667,7 @@ def get_cities(response: Response, authorization: str = Depends(security), db: S
                 }
             },
         }},
-    summary="получить все города пользователей, добавленные в систему"
+    summary="получить все страны пользователей, добавленные в систему"
 )
 def get_countries(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
     token = authorization.credentials
@@ -678,3 +678,40 @@ def get_countries(response: Response, authorization: str = Depends(security), db
     update_headers(token, db, response)
     response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
     return services.get_all_countries(db)
+
+
+@router.get(
+    "/api/filter/history",
+    response_model= schemas.UserFilterHistory,
+    responses={
+        401: {"detail": "Invalid token"},
+        404: {"detail": "Filter not found"},
+        200: {
+            "description": "Успешный ответ",
+            "headers": {
+                "X-Active": {
+                    "type": "boolean",
+                },
+                "X-Moderated": {
+                    "type": "boolean",
+                },
+                "X-Role":{
+                    "type": "string"
+                }
+            },
+        }},
+    summary="получить последний фильтр"
+)
+def get_last_filter(response: Response, authorization: str = Depends(security), db: Session = Depends(session.get_db_session)):
+    token = authorization.credentials
+    authorized = services.is_token_valid(token, db)
+    if not authorized:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    last_filter = services.get_last_filter(token, db)
+    if not last_filter:
+        raise HTTPException(status_code=404, detail="Filter not found")
+
+    update_headers(token, db, response)
+    response.headers["Access-Control-Expose-Headers"] = "X-Active, X-Moderated, X-Role"
+    return last_filter

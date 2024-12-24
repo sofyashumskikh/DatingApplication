@@ -198,14 +198,15 @@ def get_or_create_horoscope(horoscope: str, db: Session) -> int:
     db.refresh(new_horoscope)
     return new_horoscope.id
 
+
+def get_user_filter_history(pofile_id: int, db: Session) -> Optional[dbase.m.UserFilterHistory]:
+    return db.query(dbase.m.UserFilterHistory).filter(dbase.m.UserFilterHistory.profile_id == pofile_id).first()
+
 def get_horoscope(horoscope_id: int, db: Session) -> Optional[str]:
     horoscope = db.query(dbase.m.Horoscope).filter(dbase.m.Horoscope.id == horoscope_id).first()
     if not horoscope:
         return None
     return horoscope.horoscope
-
-def get_user_filter_history(pofile_id: int, db: Session) -> Optional[dbase.m.UserFilterHistory]:
-    return db.query(dbase.m.UserFilterHistory).filter(dbase.m.UserFilterHistory.profile_id == pofile_id).first()
 
 def get_country(country_id: int, db: Session) -> Optional[str]:
     country = db.query(dbase.m.Country).filter(dbase.m.Country.id == country_id).first()
@@ -284,7 +285,6 @@ def update_user_filter_history(token: str, user_filter: schemas.UserFilterHistor
     if not user_filter_old:
         user_filter_old = dbase.m.UserFilterHistory(profile_id=my_profile.id)
     user_filter_old.added_at = datetime.datetime.now()
-
     if user_filter.age:
         user_filter_old.age = user_filter.age
         filter_empty = False
@@ -305,7 +305,7 @@ def update_user_filter_history(token: str, user_filter: schemas.UserFilterHistor
         filter_empty = False
     if user_filter.country_name:
         country_ids = []
-        for country in user_filter.city_name:
+        for country in user_filter.country_name:
             country_ids.append(get_or_create_country(country, db))
         user_filter_old.country_id = country_ids
         filter_empty = False
@@ -327,7 +327,6 @@ def get_all_profiles(token: str, user_filter: schemas.UserFilterHistory, db: Ses
     users = db.query(dbase.m.User).filter(dbase.m.User.active == True, dbase.m.User.id != my_user.id).all()
     user_ids = [user.id for user in users]
     profiles = db.query(dbase.m.Profile).filter(dbase.m.Profile.user_id.in_(user_ids)).all()
-
     profiles_schemas = []
     for profile in profiles:
         profile_schema = schemas.Profile.from_orm(profile)
@@ -502,7 +501,7 @@ def match_filter(user_filter: schemas.UserFilterHistory, profile: schemas.Profil
         if not profile.age or profile.age < user_filter.age[0] or profile.age > user_filter.age[1]:
             return False
     if user_filter.gender:
-        if not profile.gender or profile.gender not in user_filter.gender:
+        if profile.gender is None or profile.gender not in user_filter.gender:
             return False
     if user_filter.horoscope:
         if not profile.horoscope or profile.horoscope not in user_filter.horoscope:
@@ -610,14 +609,41 @@ def delete_photo_by_moderator(photo_id: int, db: Session) -> bool:
     db.commit()  # Применяем изменения в базе
     return True
 
-def get_all_countries(db) -> List[str]:
+def get_all_countries(db: Session) -> List[str]:
     countries = db.query(dbase.m.Country).all()
     return [country.country_name for country in countries]
 
-def get_all_cities(db) -> List[str]:
+def get_all_cities(db: Session) -> List[str]:
     cities = db.query(dbase.m.City).all()
     return [city.city_name for city in cities]
 
-def get_all_horoscopes(db) -> List[str]:
+def get_all_horoscopes(db: Session) -> List[str]:
     horoscopes = db.query(dbase.m.Horoscope).all()
     return [horoscope.horoscope for horoscope in horoscopes]
+
+def get_last_filter(token: str, db: Session) -> Optional[schemas.UserFilterHistory]:
+    profile = get_profile_by_token(token, db)
+    if not profile:
+        return None
+
+    filter_model = db.query(dbase.m.UserFilterHistory).filter(dbase.m.UserFilterHistory.profile_id == profile.id).first()
+    if not filter_model:
+        return None
+
+    filter_scheme = schemas.UserFilterHistory()
+    filter_scheme.age = filter_model.age
+    filter_scheme.gender = filter_model.gender
+    if filter_model.horoscope_id:
+        filter_scheme.horoscope = []
+        for horoscope_id in filter_model.horoscope_id:
+            filter_scheme.horoscope.append(get_horoscope(horoscope_id, db))
+    if filter_model.city_id:
+        filter_scheme.city_name = []
+        for city_id in filter_model.city_id:
+            filter_scheme.city_name.append(get_city(city_id, db))
+    if filter_model.country_id:
+        filter_scheme.country_name = []
+        for country_id in filter_model.country_id:
+            filter_scheme.country_name.append(get_country(country_id, db))
+
+    return filter_scheme

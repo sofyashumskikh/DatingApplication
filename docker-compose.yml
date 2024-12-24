@@ -26,14 +26,14 @@ services:
 
   dating_frontend:
     build:
-      context: ./frontend
+      context: ./f
     image: dating_frontend
     depends_on:
       - dating_app
     ports:
       - "9000:9000"
     volumes:
-      - ./frontend:/app
+      - ./f:/app
       - /app/node_modules
     environment:
       - NODE_ENV=production

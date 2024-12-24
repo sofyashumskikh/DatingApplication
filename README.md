@@ -50,7 +50,8 @@ docker compose down
 
 
 ## Данные в проекте DatingAPP
-![image](https://github.com/user-attachments/assets/52f9be5f-ee93-4b8e-86cb-683c664354ba)
+![image](https://github.com/user-attachments/assets/f63e7737-9b80-40d8-b134-d528a896026b)
+
 
 
 

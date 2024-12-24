@@ -147,6 +147,18 @@
         <Method name="GET /api/complaint">
             <Description>Получить список жалоб на юзера</Description>
         </Method>
+        <Method name="GET /api/horoscopes">
+            <Description>Получить все гороскопы пользователей, добавленные в систему</Description>
+        </Method>
+        <Method name="GET /api/cities">
+            <Description>Получить все города пользователей, добавленные в систему</Description>
+        </Method>
+        <Method name="GET /api/countries">
+            <Description>Получить все страны пользователей, добавленные в систему</Description>
+        </Method>
+        <Method name="GET /api/filter/history">
+            <Description>Получить историю выбранных фильтров</Description>
+        </Method>
         <DocumentationURL>http://localhost:7000/docs</DocumentationURL>
     </API>
 
